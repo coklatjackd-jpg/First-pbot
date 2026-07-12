@@ -1,0 +1,10 @@
+
+> schedulebot@1.0.0 start
+> node src/server.js
+
+[1G[0K◇ injected env (0) from .env [2m// tip: ⌘ multiple files { path: ['.env.local', '.env'] }[0m
+[ScheduleStore] PostgreSQL storage is enabled
+[SCHEDULER] Running every 5 seconds
+[WEB] Dashboard running at http://localhost:5000
+[WA] Disconnected event: connection_lost (408)
+[WA] Disconnected event: connection_lost (408)
