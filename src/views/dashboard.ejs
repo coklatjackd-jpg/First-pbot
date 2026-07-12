@@ -383,11 +383,23 @@
                       </div>
 
                       <div id="wa-qr-wrap" class="qr-wrap linked-qr-wrap <%= waState.ready ? 'is-connected' : '' %>" <%= waState.ready || waState.qrCodeDataUrl ? '' : 'hidden' %>>
-                        <% if (waState.qrCodeDataUrl) { %>
-                        <img src="<%= waState.qrCodeDataUrl %>" alt="QR WhatsApp" class="qr" <%= !waState.ready && waState.qrCodeDataUrl ? '' : 'hidden' %> />
-                        <% } else { %>
-                        <img src="" alt="QR WhatsApp" class="qr" hidden />
-                        <% } %>
+                        <div class="qr-image-container" id="qrImageContainer">
+                          <% if (waState.qrCodeDataUrl) { %>
+                          <img src="<%= waState.qrCodeDataUrl %>" alt="QR WhatsApp" class="qr" <%= !waState.ready && waState.qrCodeDataUrl ? '' : 'hidden' %> />
+                          <% } else { %>
+                          <img src="" alt="QR WhatsApp" class="qr" hidden />
+                          <% } %>
+                          <div class="qr-expired-overlay" id="qrExpiredOverlay" hidden>
+                            <span class="qr-refresh-spinner" aria-hidden="true"></span>
+                            <p class="qr-expired-label">Refreshing QR...</p>
+                          </div>
+                        </div>
+                        <div class="qr-countdown-wrap" id="qrCountdownWrap" hidden>
+                          <div class="qr-countdown-bar-track">
+                            <div class="qr-countdown-bar-fill" id="qrCountdownBarFill"></div>
+                          </div>
+                          <p class="qr-countdown-text" id="qrCountdownText"></p>
+                        </div>
                         <div id="wa-qr-connected-banner" class="qr-connected-banner" <%= waState.ready ? '' : 'hidden' %>>
                           <span class="connected-icon" aria-hidden="true">✓</span>
                           <div>

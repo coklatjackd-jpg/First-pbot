@@ -3513,6 +3513,107 @@ tbody tr:hover {
   font-size: 13px;
 }
 
+/* ---------- QR Countdown ---------- */
+
+.qr-image-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-expired-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.qr-refresh-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: qrSpinnerRotate 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes qrSpinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+.qr-expired-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: 0.01em;
+}
+
+.qr-countdown-wrap {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.qr-countdown-bar-track {
+  width: 100%;
+  height: 3px;
+  background: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.qr-countdown-bar-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 1s linear, background var(--motion-fast) ease;
+  transform-origin: left;
+}
+
+.qr-countdown-bar-fill.is-warning {
+  background: var(--warning);
+}
+
+.qr-countdown-bar-fill.is-expired {
+  background: var(--danger);
+  width: 0% !important;
+  transition: none;
+}
+
+.qr-countdown-text {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  transition: color var(--motion-fast) ease;
+}
+
+.qr-countdown-text.is-warning {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.qr-countdown-text.is-expired {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* Enhanced linked devices styling */
 .qr-wrap.linked-qr-wrap {
   position: relative;

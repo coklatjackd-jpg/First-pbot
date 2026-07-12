@@ -46,6 +46,76 @@ const waQrCaption = document.getElementById('wa-qr-caption');
 const waQrImage = waQrWrap ? waQrWrap.querySelector('img.qr') : null;
 const waQrInstructions = document.getElementById('wa-qr-instructions');
 const waQrConnectedBanner = document.getElementById('wa-qr-connected-banner');
+const qrCountdownWrap = document.getElementById('qrCountdownWrap');
+const qrCountdownBarFill = document.getElementById('qrCountdownBarFill');
+const qrCountdownText = document.getElementById('qrCountdownText');
+const qrExpiredOverlay = document.getElementById('qrExpiredOverlay');
+
+const QR_EXPIRY_SECONDS = 60;
+let _qrCountdownTimer = null;
+let _qrSecondsLeft = 0;
+let _lastQrSrc = '';
+
+function _qrUpdateUI() {
+  const pct = _qrSecondsLeft / QR_EXPIRY_SECONDS;
+  const isWarning = _qrSecondsLeft <= 15 && _qrSecondsLeft > 0;
+  const isExpired = _qrSecondsLeft <= 0;
+
+  if (qrCountdownBarFill) {
+    qrCountdownBarFill.style.width = `${pct * 100}%`;
+    qrCountdownBarFill.classList.toggle('is-warning', isWarning);
+    qrCountdownBarFill.classList.toggle('is-expired', isExpired);
+  }
+
+  if (qrCountdownText) {
+    if (isExpired) {
+      qrCountdownText.textContent = 'Waiting for new QR code...';
+      qrCountdownText.classList.remove('is-warning');
+      qrCountdownText.classList.add('is-expired');
+    } else if (isWarning) {
+      qrCountdownText.textContent = `QR expires in ${_qrSecondsLeft}s — scan now!`;
+      qrCountdownText.classList.add('is-warning');
+      qrCountdownText.classList.remove('is-expired');
+    } else {
+      qrCountdownText.textContent = `QR code valid for ${_qrSecondsLeft}s`;
+      qrCountdownText.classList.remove('is-warning', 'is-expired');
+    }
+  }
+}
+
+function _qrStartCountdown() {
+  _qrStopCountdown();
+  _qrSecondsLeft = QR_EXPIRY_SECONDS;
+  if (qrCountdownWrap) qrCountdownWrap.hidden = false;
+  if (qrExpiredOverlay) qrExpiredOverlay.hidden = true;
+  if (waQrImage) waQrImage.style.opacity = '';
+  _qrUpdateUI();
+
+  _qrCountdownTimer = setInterval(() => {
+    _qrSecondsLeft -= 1;
+    _qrUpdateUI();
+    if (_qrSecondsLeft <= 0) {
+      _qrStopCountdown();
+      if (qrExpiredOverlay) qrExpiredOverlay.hidden = false;
+      if (waQrImage) waQrImage.style.opacity = '0.15';
+    }
+  }, 1000);
+}
+
+function _qrStopCountdown() {
+  if (_qrCountdownTimer) {
+    clearInterval(_qrCountdownTimer);
+    _qrCountdownTimer = null;
+  }
+}
+
+function _qrReset() {
+  _qrStopCountdown();
+  _lastQrSrc = '';
+  if (qrCountdownWrap) qrCountdownWrap.hidden = true;
+  if (qrExpiredOverlay) qrExpiredOverlay.hidden = true;
+  if (waQrImage) waQrImage.style.opacity = '';
+}
 const methodTabQr = document.getElementById('methodTabQr');
 const methodTabPhone = document.getElementById('methodTabPhone');
 const qrMethodPanel = document.getElementById('qr-method');
@@ -1279,8 +1349,13 @@ function renderWhatsAppState(state) {
       if (waQrCaption) {
         waQrCaption.textContent = 'WhatsApp already connected. QR scan is not required.';
       }
+      _qrReset();
     } else if (qrCodeDataUrl) {
-      waQrImage.src = qrCodeDataUrl;
+      if (qrCodeDataUrl !== _lastQrSrc) {
+        _lastQrSrc = qrCodeDataUrl;
+        waQrImage.src = qrCodeDataUrl;
+        _qrStartCountdown();
+      }
       waQrImage.hidden = false;
       waQrWrap.hidden = false;
       waQrWrap.classList.remove('is-connected');
@@ -1301,6 +1376,7 @@ function renderWhatsAppState(state) {
       if (waQrCaption) {
         waQrCaption.textContent = '';
       }
+      _qrReset();
     }
   }
 
