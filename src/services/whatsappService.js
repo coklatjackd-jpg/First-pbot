@@ -29,6 +29,7 @@ const {
   makeInMemoryStore,
   normalizeMessageContent,
   downloadContentFromMessage,
+  Browsers,
 } = baileys;
 
 function sleep(ms) {
@@ -586,10 +587,10 @@ class WhatsAppService {
         keys: makeCacheableSignalKeyStore(state.keys, socketLogger),
       },
       logger: socketLogger,
-      browser: ['ScheduleBot', 'Desktop', '1.0.0'],
+      browser: Browsers.macOS('Chrome'),
       printQRInTerminal: false,
       connectTimeoutMs: Number(process.env.WA_CONNECT_TIMEOUT_MS || 60000),
-      keepAliveIntervalMs: 15000,
+      keepAliveIntervalMs: 25000,
       defaultQueryTimeoutMs: Number(process.env.WA_QUERY_TIMEOUT_MS || 60000),
       version,
     });
@@ -701,6 +702,32 @@ class WhatsAppService {
     if (statusCode === 405) return 'auth_invalid (405)';
     if (statusCode === DisconnectReason.unavailableService) return 'unavailable_service (503)';
     return statusCode ? `unknown (${statusCode})` : 'unknown';
+  }
+
+  async forceReset() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    try {
+      if (this.sock) {
+        this.sock.end(new Error('force_reset'));
+        this.sock = null;
+      }
+    } catch (_) {}
+    this.ready = false;
+    this.isInitializing = false;
+    this.initPromise = null;
+    this.reconnectAttempts = 0;
+    this.qrCodeDataUrl = null;
+    this.qrGeneratedAt = null;
+    this.pairingCode = null;
+    this.lastStatus = 'Restarting connection...';
+    try {
+      fs.rmSync(this.authPath, { recursive: true, force: true });
+      fs.mkdirSync(this.authPath, { recursive: true });
+    } catch (_) {}
+    this.init();
   }
 
   scheduleReinitialize(trigger, delayOverrideMs) {

@@ -415,9 +415,13 @@
                           <li>Scan the QR code above using your phone camera.</li>
                         </ol>
                       </div>
-                      <p id="wa-qr-empty" class="muted" <%= !waState.ready && !waState.qrCodeDataUrl ? '' : 'hidden' %>>
-                        QR will appear automatically when re-login is needed.
-                      </p>
+                      <div id="wa-qr-empty" class="qr-empty-wrap" <%= !waState.ready && !waState.qrCodeDataUrl ? '' : 'hidden' %>>
+                        <div class="qr-connecting-spinner" id="qrConnectingSpinner"></div>
+                        <p class="qr-connecting-status" id="qrConnectingStatus"><%= waState.status || 'Connecting to WhatsApp...' %></p>
+                        <p class="qr-connecting-hint">QR code will appear once connection is established.</p>
+                        <button type="button" class="btn btn-outline btn-sm" id="waResetBtn" style="margin-top: 8px;">Reset &amp; Get New QR</button>
+                        <p class="qr-connecting-feedback" id="waResetFeedback"></p>
+                      </div>
                     </div>
 
                     <div id="phone-method" class="method-panel linked-method-panel" hidden>

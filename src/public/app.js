@@ -50,6 +50,9 @@ const qrCountdownWrap = document.getElementById('qrCountdownWrap');
 const qrCountdownBarFill = document.getElementById('qrCountdownBarFill');
 const qrCountdownText = document.getElementById('qrCountdownText');
 const qrExpiredOverlay = document.getElementById('qrExpiredOverlay');
+const qrConnectingStatus = document.getElementById('qrConnectingStatus');
+const waResetBtn = document.getElementById('waResetBtn');
+const waResetFeedback = document.getElementById('waResetFeedback');
 
 const QR_EXPIRY_SECONDS = 60;
 let _qrCountdownTimer = null;
@@ -1378,6 +1381,9 @@ function renderWhatsAppState(state) {
       if (waQrConnectedBanner) waQrConnectedBanner.hidden = true;
       if (waQrInstructions) waQrInstructions.hidden = false;
       waQrEmpty.hidden = false;
+      if (qrConnectingStatus) {
+        qrConnectingStatus.textContent = statusText || 'Connecting to WhatsApp...';
+      }
       if (waQrCaption) {
         waQrCaption.textContent = '';
       }
@@ -1781,6 +1787,27 @@ if (pairingPhoneInput) {
     const normalized = rawValue.startsWith('+') ? `+${digitsOnly}` : digitsOnly;
     if (pairingPhoneInput.value !== normalized) {
       pairingPhoneInput.value = normalized;
+    }
+  });
+}
+
+if (waResetBtn) {
+  waResetBtn.addEventListener('click', async () => {
+    waResetBtn.disabled = true;
+    if (waResetFeedback) waResetFeedback.textContent = 'Restarting connection...';
+    try {
+      const res = await fetch('/api/whatsapp/reset', { method: 'POST' });
+      if (!res.ok) throw new Error('Reset failed');
+      if (waResetFeedback) waResetFeedback.textContent = 'Restarted — waiting for QR...';
+      _lastQrSrc = '';
+      await refreshWhatsAppState();
+    } catch (_) {
+      if (waResetFeedback) waResetFeedback.textContent = 'Reset failed, please try again.';
+    } finally {
+      setTimeout(() => {
+        waResetBtn.disabled = false;
+        if (waResetFeedback) waResetFeedback.textContent = '';
+      }, 5000);
     }
   });
 }

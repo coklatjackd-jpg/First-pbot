@@ -352,6 +352,15 @@ function createDashboardRouter(whatsappService) {
     return res.json(waState);
   });
 
+  router.post('/api/whatsapp/reset', async (req, res) => {
+    try {
+      await whatsappService.forceReset();
+      return res.json({ ok: true });
+    } catch (error) {
+      return res.status(500).json({ error: error.message || 'Reset failed' });
+    }
+  });
+
   router.get('/api/chat-response-settings', (req, res) => {
     return res.json(chatResponseSettingsStore.getSettings());
   });
