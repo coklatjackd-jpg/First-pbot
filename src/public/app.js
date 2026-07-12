@@ -83,9 +83,11 @@ function _qrUpdateUI() {
   }
 }
 
-function _qrStartCountdown() {
+function _qrStartCountdown(startFromSeconds) {
   _qrStopCountdown();
-  _qrSecondsLeft = QR_EXPIRY_SECONDS;
+  _qrSecondsLeft = typeof startFromSeconds === 'number'
+    ? Math.max(1, Math.min(Math.round(startFromSeconds), QR_EXPIRY_SECONDS))
+    : QR_EXPIRY_SECONDS;
   if (qrCountdownWrap) qrCountdownWrap.hidden = false;
   if (qrExpiredOverlay) qrExpiredOverlay.hidden = true;
   if (waQrImage) waQrImage.style.opacity = '';
@@ -1354,7 +1356,10 @@ function renderWhatsAppState(state) {
       if (qrCodeDataUrl !== _lastQrSrc) {
         _lastQrSrc = qrCodeDataUrl;
         waQrImage.src = qrCodeDataUrl;
-        _qrStartCountdown();
+        const generatedAt = typeof state.qrGeneratedAt === 'number' ? state.qrGeneratedAt : null;
+        const elapsedS = generatedAt ? (Date.now() - generatedAt) / 1000 : 0;
+        const remainingS = QR_EXPIRY_SECONDS - elapsedS;
+        _qrStartCountdown(remainingS > 2 ? remainingS : QR_EXPIRY_SECONDS);
       }
       waQrImage.hidden = false;
       waQrWrap.hidden = false;
@@ -2249,27 +2254,30 @@ if (sendRefreshPersonalChatsBtn) {
 }
 
 let _waPollInterval = null;
-let _waPollFastCount = 0;
-const WA_POLL_FAST_MS = 2000;
-const WA_POLL_SLOW_MS = 5000;
-const WA_POLL_FAST_CYCLES = 15;
+const WA_POLL_QR_MS = 2000;
+const WA_POLL_IDLE_MS = 5000;
 
-function _scheduleWaPoll() {
-  if (_waPollInterval) clearInterval(_waPollInterval);
-  const isSettled = isWhatsAppReady || _lastQrSrc !== '';
-  const ms = (!isSettled && _waPollFastCount < WA_POLL_FAST_CYCLES) ? WA_POLL_FAST_MS : WA_POLL_SLOW_MS;
-  _waPollInterval = setInterval(async () => {
-    await refreshWhatsAppState();
-    _waPollFastCount += 1;
-    const nowSettled = isWhatsAppReady || _lastQrSrc !== '';
-    if (_waPollFastCount >= WA_POLL_FAST_CYCLES && !nowSettled) {
-      clearInterval(_waPollInterval);
-      _waPollInterval = setInterval(refreshWhatsAppState, WA_POLL_SLOW_MS);
-    }
-  }, ms);
+function _getWaPollMs() {
+  if (isWhatsAppReady) return WA_POLL_IDLE_MS;
+  return WA_POLL_QR_MS;
 }
 
-refreshWhatsAppState().then(_scheduleWaPoll);
+async function _waPollTick() {
+  await refreshWhatsAppState();
+  const nextMs = _getWaPollMs();
+  const curMs = _waPollInterval?._delay;
+  if (curMs !== nextMs) {
+    clearInterval(_waPollInterval);
+    _waPollInterval = setInterval(_waPollTick, nextMs);
+    _waPollInterval._delay = nextMs;
+  }
+}
+
+refreshWhatsAppState().then(() => {
+  const ms = _getWaPollMs();
+  _waPollInterval = setInterval(_waPollTick, ms);
+  _waPollInterval._delay = ms;
+});
 
 if (toggleBotResponsePersonal || toggleBotResponseGroup || toggleBotResponseSelfCommand) {
   loadChatResponseSettings();

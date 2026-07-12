@@ -447,6 +447,7 @@ class WhatsAppService {
   constructor() {
     this.sock = null;
     this.qrCodeDataUrl = null;
+    this.qrGeneratedAt = null;
     this.ready = false;
     this.lastStatus = 'Initializing...';
     this.reconnectTimer = null;
@@ -619,6 +620,7 @@ class WhatsAppService {
 
       if (qr) {
         this.qrCodeDataUrl = await qrcode.toDataURL(qr);
+        this.qrGeneratedAt = Date.now();
         this.lastStatus = 'Scan QR from dashboard';
         this.ready = false;
         this.isInitializing = false;
@@ -635,6 +637,7 @@ class WhatsAppService {
         this.isInitializing = false;
         this.reconnectAttempts = 0;
         this.qrCodeDataUrl = null;
+        this.qrGeneratedAt = null;
         this.pairingCode = null;
         if (!wasReady) {
           console.log('[WA] Client ready');
@@ -748,6 +751,7 @@ class WhatsAppService {
       ready: this.ready,
       status: this.lastStatus,
       qrCodeDataUrl: this.qrCodeDataUrl,
+      qrGeneratedAt: this.qrGeneratedAt,
       pairingCode: this.pairingCode,
       connectedAccount: {
         jid,
