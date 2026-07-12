@@ -121,6 +121,12 @@ function _qrReset() {
   if (qrExpiredOverlay) qrExpiredOverlay.hidden = true;
   if (waQrImage) waQrImage.style.opacity = '';
 }
+function _cssColor(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+const COLOR_MUTED   = () => _cssColor('--muted-foreground');
+const COLOR_DANGER  = () => _cssColor('--danger');
+const COLOR_SUCCESS = () => _cssColor('--success');
+const COLOR_WARNING = () => _cssColor('--warning');
+
 const methodTabQr = document.getElementById('methodTabQr');
 const methodTabPhone = document.getElementById('methodTabPhone');
 const qrMethodPanel = document.getElementById('qr-method');
@@ -637,7 +643,7 @@ function applyTimeZoneSettingUI() {
 
   if (timezoneSettingFeedback) {
     timezoneSettingFeedback.textContent = `Current timezone: ${preferred}`;
-    timezoneSettingFeedback.style.color = '#5d645d';
+    timezoneSettingFeedback.style.color = COLOR_MUTED();
   }
 
   applyProfileSummaryMeta();
@@ -836,7 +842,7 @@ async function loadAccessControlSettings() {
   } catch (error) {
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = error.message;
-      ownerNumberFeedback.style.color = '#b42318';
+      ownerNumberFeedback.style.color = COLOR_DANGER();
     }
   }
 }
@@ -848,7 +854,7 @@ async function saveAccessControlSettings(nextSettings) {
   if (normalized.commandMode === 'private' && ownerDigitCount < 8) {
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = 'Owner number is required (minimum 8 digits) when mode is Private.';
-      ownerNumberFeedback.style.color = '#b42318';
+      ownerNumberFeedback.style.color = COLOR_DANGER();
     }
     return;
   }
@@ -870,12 +876,12 @@ async function saveAccessControlSettings(nextSettings) {
 
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = 'Access control saved successfully.';
-      ownerNumberFeedback.style.color = '#136f63';
+      ownerNumberFeedback.style.color = COLOR_SUCCESS();
     }
   } catch (error) {
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = error.message;
-      ownerNumberFeedback.style.color = '#b42318';
+      ownerNumberFeedback.style.color = COLOR_DANGER();
     }
   } finally {
     setButtonLoading(ownerNumberSaveBtn, false);
@@ -968,7 +974,7 @@ function normalizeChatResponseSettings(value) {
   };
 }
 
-function setBotResponseFeedback(message, color = '#5d645d') {
+function setBotResponseFeedback(message, color = COLOR_MUTED()) {
   if (!botResponseSettingsFeedback) return;
   botResponseSettingsFeedback.textContent = message;
   botResponseSettingsFeedback.style.color = color;
@@ -1028,7 +1034,7 @@ async function loadChatResponseSettings() {
     applyChatResponseSettingsUI(chatResponseSettings);
     setBotResponseFeedback('');
   } catch (error) {
-    setBotResponseFeedback(error.message, '#b42318');
+    setBotResponseFeedback(error.message, COLOR_DANGER());
   }
 }
 
@@ -1049,9 +1055,9 @@ async function saveChatResponseSettings(nextSettings) {
     }
 
     chatResponseSettings = normalizeChatResponseSettings(data);
-    setBotResponseFeedback('Bot response settings updated successfully.', '#136f63');
+    setBotResponseFeedback('Bot response settings updated successfully.', COLOR_SUCCESS());
   } catch (error) {
-    setBotResponseFeedback(error.message, '#b42318');
+    setBotResponseFeedback(error.message, COLOR_DANGER());
   } finally {
     isSavingBotResponseSettings = false;
     applyChatResponseSettingsUI(chatResponseSettings);
@@ -1335,7 +1341,7 @@ function renderWhatsAppState(state) {
 
   if (pairingFeedback && isReady) {
     pairingFeedback.textContent = 'Pairing via phone number is disabled while WhatsApp is connected.';
-    pairingFeedback.style.color = '#5d645d';
+    pairingFeedback.style.color = COLOR_MUTED();
   }
 
   if (accountTargetTips) {
@@ -1528,7 +1534,7 @@ if (accountProfileForm) {
 
     if (accountProfileFeedback) {
       accountProfileFeedback.textContent = 'Profile updated successfully.';
-      accountProfileFeedback.style.color = '#136f63';
+      accountProfileFeedback.style.color = COLOR_SUCCESS();
     }
   });
 }
@@ -1538,7 +1544,7 @@ function saveTimezoneSettingFromSelection() {
   if (!selected || !isSupportedTimeZone(selected)) {
     if (timezoneSettingFeedback) {
       timezoneSettingFeedback.textContent = 'Invalid timezone selected.';
-      timezoneSettingFeedback.style.color = '#b42318';
+      timezoneSettingFeedback.style.color = COLOR_DANGER();
     }
     return false;
   }
@@ -1549,7 +1555,7 @@ function saveTimezoneSettingFromSelection() {
 
   if (timezoneSettingFeedback) {
     timezoneSettingFeedback.textContent = `Timezone saved: ${selected}`;
-    timezoneSettingFeedback.style.color = '#136f63';
+    timezoneSettingFeedback.style.color = COLOR_SUCCESS();
   }
 
   return true;
@@ -1655,19 +1661,19 @@ if (shareScheduleLinkBtn) {
     setButtonLoading(shareScheduleLinkBtn, true, 'Copying share link');
     if (shareScheduleLinkFeedback) {
       shareScheduleLinkFeedback.textContent = 'Preparing share link...';
-      shareScheduleLinkFeedback.style.color = '#5d645d';
+      shareScheduleLinkFeedback.style.color = COLOR_MUTED();
     }
 
     try {
       await copyTextToClipboard(shareUrl);
       if (shareScheduleLinkFeedback) {
         shareScheduleLinkFeedback.textContent = `Share link copied: ${shareUrl}`;
-        shareScheduleLinkFeedback.style.color = '#136f63';
+        shareScheduleLinkFeedback.style.color = COLOR_SUCCESS();
       }
     } catch (error) {
       if (shareScheduleLinkFeedback) {
         shareScheduleLinkFeedback.textContent = `Share link: ${shareUrl}`;
-        shareScheduleLinkFeedback.style.color = '#9f4f03';
+        shareScheduleLinkFeedback.style.color = COLOR_WARNING();
       }
     } finally {
       setButtonLoading(shareScheduleLinkBtn, false);
@@ -1817,7 +1823,7 @@ if (requestPairingBtn) {
     if (isWhatsAppReady) {
       if (pairingFeedback) {
         pairingFeedback.textContent = 'Pairing via phone number is disabled while WhatsApp is connected.';
-        pairingFeedback.style.color = '#b42318';
+        pairingFeedback.style.color = COLOR_DANGER();
       }
       return;
     }
@@ -1835,7 +1841,7 @@ if (requestPairingBtn) {
     if (!phoneNumber) {
       if (pairingFeedback) {
         pairingFeedback.textContent = 'Please enter a phone number';
-        pairingFeedback.style.color = '#b42318';
+        pairingFeedback.style.color = COLOR_DANGER();
       }
       return;
     }
@@ -1843,7 +1849,7 @@ if (requestPairingBtn) {
     setButtonLoading(requestPairingBtn, true, 'Requesting pairing code');
     if (pairingFeedback) {
       pairingFeedback.textContent = 'Requesting pairing code...';
-      pairingFeedback.style.color = '#5d645d';
+      pairingFeedback.style.color = COLOR_MUTED();
     }
     if (pairingCodeWrap) pairingCodeWrap.hidden = true;
 
@@ -1865,12 +1871,12 @@ if (requestPairingBtn) {
       }
       if (pairingFeedback) {
         pairingFeedback.textContent = 'Pairing code generated, enter it in WhatsApp.';
-        pairingFeedback.style.color = '#136f63';
+        pairingFeedback.style.color = COLOR_SUCCESS();
       }
     } catch (error) {
       if (pairingFeedback) {
         pairingFeedback.textContent = error.message;
-        pairingFeedback.style.color = '#b42318';
+        pairingFeedback.style.color = COLOR_DANGER();
       }
     } finally {
       setButtonLoading(requestPairingBtn, false);
@@ -1897,13 +1903,13 @@ async function refreshWhatsAppState() {
   }
 }
 
-function setGroupHint(text, color = '#5d645d') {
+function setGroupHint(text, color = COLOR_MUTED()) {
   if (!groupFetchHint) return;
   groupFetchHint.textContent = text;
   groupFetchHint.style.color = color;
 }
 
-function setSendGroupHint(text, color = '#5d645d') {
+function setSendGroupHint(text, color = COLOR_MUTED()) {
   if (!sendGroupFetchHint) return;
   sendGroupFetchHint.textContent = text;
   sendGroupFetchHint.style.color = color;
@@ -1939,13 +1945,13 @@ function setSendGroupPickerOptions(groups) {
   sendGroupPicker.innerHTML = baseOption + optionHtml;
 }
 
-function setPersonalChatHint(text, color = '#5d645d') {
+function setPersonalChatHint(text, color = COLOR_MUTED()) {
   if (!personalChatFetchHint) return;
   personalChatFetchHint.textContent = text;
   personalChatFetchHint.style.color = color;
 }
 
-function setSendPersonalChatHint(text, color = '#5d645d') {
+function setSendPersonalChatHint(text, color = COLOR_MUTED()) {
   if (!sendPersonalChatFetchHint) return;
   sendPersonalChatFetchHint.textContent = text;
   sendPersonalChatFetchHint.style.color = color;
@@ -1991,7 +1997,7 @@ async function loadPersonalChats(force = false) {
 
   personalChatPicker.disabled = true;
   if (refreshPersonalChatsBtn) setButtonLoading(refreshPersonalChatsBtn, true, 'Refreshing chats');
-  setPersonalChatHint('Fetching personal chat list...', '#5d645d');
+  setPersonalChatHint('Fetching personal chat list...', COLOR_MUTED());
 
   try {
     const response = await fetch('/api/whatsapp/personal-chats');
@@ -2006,13 +2012,13 @@ async function loadPersonalChats(force = false) {
     hasLoadedPersonalChats = true;
 
     if (chats.length) {
-      setPersonalChatHint('Select a chat to auto-fill the destination ID.', '#5d645d');
+      setPersonalChatHint('Select a chat to auto-fill the destination ID.', COLOR_MUTED());
     } else {
-      setPersonalChatHint('No personal chats found on this account.', '#9f4f03');
+      setPersonalChatHint('No personal chats found on this account.', COLOR_WARNING());
     }
   } catch (error) {
     setPersonalChatPickerOptions([]);
-    setPersonalChatHint(error.message, '#b42318');
+    setPersonalChatHint(error.message, COLOR_DANGER());
   } finally {
     personalChatPicker.disabled = false;
     if (refreshPersonalChatsBtn) {
@@ -2030,7 +2036,7 @@ async function loadSendPersonalChats(force = false) {
   if (sendRefreshPersonalChatsBtn) {
     setButtonLoading(sendRefreshPersonalChatsBtn, true, 'Refreshing chats');
   }
-  setSendPersonalChatHint('Fetching personal chat list...', '#5d645d');
+  setSendPersonalChatHint('Fetching personal chat list...', COLOR_MUTED());
 
   try {
     const response = await fetch('/api/whatsapp/personal-chats');
@@ -2045,13 +2051,13 @@ async function loadSendPersonalChats(force = false) {
     hasLoadedSendPersonalChats = true;
 
     if (chats.length) {
-      setSendPersonalChatHint('Select a chat to auto-fill the destination ID.', '#5d645d');
+      setSendPersonalChatHint('Select a chat to auto-fill the destination ID.', COLOR_MUTED());
     } else {
-      setSendPersonalChatHint('No personal chats found on this account.', '#9f4f03');
+      setSendPersonalChatHint('No personal chats found on this account.', COLOR_WARNING());
     }
   } catch (error) {
     setSendPersonalChatPickerOptions([]);
-    setSendPersonalChatHint(error.message, '#b42318');
+    setSendPersonalChatHint(error.message, COLOR_DANGER());
   } finally {
     sendPersonalChatPicker.disabled = false;
     if (sendRefreshPersonalChatsBtn) {
@@ -2067,7 +2073,7 @@ async function loadGroups(force = false) {
 
   groupPicker.disabled = true;
   if (refreshGroupsBtn) setButtonLoading(refreshGroupsBtn, true, 'Refreshing groups');
-  setGroupHint('Fetching group list...', '#5d645d');
+  setGroupHint('Fetching group list...', COLOR_MUTED());
 
   try {
     const response = await fetch('/api/whatsapp/groups');
@@ -2082,13 +2088,13 @@ async function loadGroups(force = false) {
     hasLoadedGroups = true;
 
     if (groups.length) {
-      setGroupHint('Select a group to auto-fill the ID.', '#5d645d');
+      setGroupHint('Select a group to auto-fill the ID.', COLOR_MUTED());
     } else {
-      setGroupHint('No groups found on this account.', '#9f4f03');
+      setGroupHint('No groups found on this account.', COLOR_WARNING());
     }
   } catch (error) {
     setGroupPickerOptions([]);
-    setGroupHint(error.message, '#b42318');
+    setGroupHint(error.message, COLOR_DANGER());
   } finally {
     groupPicker.disabled = false;
     if (refreshGroupsBtn) {
@@ -2104,7 +2110,7 @@ async function loadSendGroups(force = false) {
 
   sendGroupPicker.disabled = true;
   if (sendRefreshGroupsBtn) setButtonLoading(sendRefreshGroupsBtn, true, 'Refreshing groups');
-  setSendGroupHint('Fetching group list...', '#5d645d');
+  setSendGroupHint('Fetching group list...', COLOR_MUTED());
 
   try {
     const response = await fetch('/api/whatsapp/groups');
@@ -2119,13 +2125,13 @@ async function loadSendGroups(force = false) {
     hasLoadedSendGroups = true;
 
     if (groups.length) {
-      setSendGroupHint('Select a group to auto-fill the ID.', '#5d645d');
+      setSendGroupHint('Select a group to auto-fill the ID.', COLOR_MUTED());
     } else {
-      setSendGroupHint('No groups found on this account.', '#9f4f03');
+      setSendGroupHint('No groups found on this account.', COLOR_WARNING());
     }
   } catch (error) {
     setSendGroupPickerOptions([]);
-    setSendGroupHint(error.message, '#b42318');
+    setSendGroupHint(error.message, COLOR_DANGER());
   } finally {
     sendGroupPicker.disabled = false;
     if (sendRefreshGroupsBtn) {
@@ -2337,7 +2343,7 @@ if (form) {
 
     if (repeatType === 'weekly' && !repeatDays.length) {
       feedback.textContent = 'Select at least one day for a weekly repeat schedule.';
-      feedback.style.color = '#b42318';
+      feedback.style.color = COLOR_DANGER();
       return;
     }
 
@@ -2360,12 +2366,12 @@ if (form) {
 
     if (!payload.targetValue) {
       feedback.textContent = 'Target value is required.';
-      feedback.style.color = '#b42318';
+      feedback.style.color = COLOR_DANGER();
       return;
     }
 
     feedback.textContent = 'Saving schedule...';
-    feedback.style.color = '#5d645d';
+    feedback.style.color = COLOR_MUTED();
     setButtonLoading(submitBtn, true, 'Saving schedule');
 
     try {
@@ -2402,7 +2408,7 @@ if (form) {
       }
 
       feedback.textContent = 'Schedule saved successfully';
-      feedback.style.color = '#136f63';
+      feedback.style.color = COLOR_SUCCESS();
       form.reset();
       syncTargetInputContent();
       updateScheduleRepeatFlow();
@@ -2410,7 +2416,7 @@ if (form) {
       setTimeout(() => window.location.reload(), 350);
     } catch (error) {
       feedback.textContent = error.message;
-      feedback.style.color = '#b42318';
+      feedback.style.color = COLOR_DANGER();
     } finally {
       setButtonLoading(submitBtn, false);
     }
@@ -2432,14 +2438,14 @@ if (sendForm) {
     if (!payload.targetType || !payload.targetValue || !payload.message) {
       if (sendFeedback) {
         sendFeedback.textContent = 'Target type, target value, and message are required.';
-        sendFeedback.style.color = '#b42318';
+        sendFeedback.style.color = COLOR_DANGER();
       }
       return;
     }
 
     if (sendFeedback) {
       sendFeedback.textContent = 'Sending message...';
-      sendFeedback.style.color = '#5d645d';
+      sendFeedback.style.color = COLOR_MUTED();
     }
     setButtonLoading(submitBtn, true, 'Sending message');
 
@@ -2457,7 +2463,7 @@ if (sendForm) {
 
       if (sendFeedback) {
         sendFeedback.textContent = 'Message sent successfully';
-        sendFeedback.style.color = '#136f63';
+        sendFeedback.style.color = COLOR_SUCCESS();
       }
 
       const selectedType = String(sendTargetTypeInput?.value || 'group').trim();
@@ -2467,7 +2473,7 @@ if (sendForm) {
     } catch (error) {
       if (sendFeedback) {
         sendFeedback.textContent = error.message;
-        sendFeedback.style.color = '#b42318';
+        sendFeedback.style.color = COLOR_DANGER();
       }
     } finally {
       setButtonLoading(submitBtn, false);
@@ -2587,7 +2593,7 @@ function closeScheduleViewModal() {
   activeScheduleModalId = '';
   if (scheduleModalFeedback) {
     scheduleModalFeedback.textContent = '';
-    scheduleModalFeedback.style.color = '#5d645d';
+    scheduleModalFeedback.style.color = COLOR_MUTED();
   }
   if (scheduleModalDeleteBtn) {
     setButtonLoading(scheduleModalDeleteBtn, false);
@@ -2654,7 +2660,7 @@ function openScheduleViewModal(item) {
   if (scheduleModalMessage) scheduleModalMessage.textContent = String(item.message || '-');
   if (scheduleModalFeedback) {
     scheduleModalFeedback.textContent = '';
-    scheduleModalFeedback.style.color = '#5d645d';
+    scheduleModalFeedback.style.color = COLOR_MUTED();
   }
   if (scheduleModalDeleteBtn) {
     setButtonLoading(scheduleModalDeleteBtn, false);
@@ -2707,7 +2713,7 @@ if (scheduleModalDeleteBtn) {
     setButtonLoading(scheduleModalDeleteBtn, true, 'Deleting schedule');
     if (scheduleModalFeedback) {
       scheduleModalFeedback.textContent = 'Deleting schedule...';
-      scheduleModalFeedback.style.color = '#5d645d';
+      scheduleModalFeedback.style.color = COLOR_MUTED();
     }
 
     try {
@@ -2722,14 +2728,14 @@ if (scheduleModalDeleteBtn) {
 
       if (scheduleModalFeedback) {
         scheduleModalFeedback.textContent = 'Schedule deleted';
-        scheduleModalFeedback.style.color = '#136f63';
+        scheduleModalFeedback.style.color = COLOR_SUCCESS();
       }
 
       setTimeout(() => window.location.reload(), 250);
     } catch (error) {
       if (scheduleModalFeedback) {
         scheduleModalFeedback.textContent = error.message;
-        scheduleModalFeedback.style.color = '#b42318';
+        scheduleModalFeedback.style.color = COLOR_DANGER();
       }
       setButtonLoading(scheduleModalDeleteBtn, false);
       scheduleModalDeleteBtn.disabled = false;
@@ -3123,7 +3129,7 @@ if (buttonSetupGuideModal) {
 function setCommandFeedback(message, color) {
   if (!commandFeedback) return;
   commandFeedback.textContent = message;
-  commandFeedback.style.color = color || '#5d645d';
+  commandFeedback.style.color = color || COLOR_MUTED();
 }
 
 function normalizeMediaSourceValue(value) {
@@ -3534,7 +3540,7 @@ if (commandForm) {
     if (selectedMediaType && selectedMediaType !== 'none' && selectedMediaSource === 'upload') {
       const selectedFile = commandMediaUploadInput?.files?.[0];
       if (selectedFile) {
-        setCommandFeedback('Uploading media file...', '#5d645d');
+        setCommandFeedback('Uploading media file...', COLOR_MUTED());
         const uploaded = await uploadCommandMediaFile(selectedFile, selectedMediaType);
         mediaUrl = String(uploaded.mediaUrl || '').trim();
         if (!fileName) {
@@ -3553,7 +3559,7 @@ if (commandForm) {
       buttons: collectButtonsFromRows(),
     };
 
-    setCommandFeedback('Saving command...', '#5d645d');
+    setCommandFeedback('Saving command...', COLOR_MUTED());
     setButtonLoading(submitBtn, true, 'Saving command');
 
     try {
@@ -3568,10 +3574,10 @@ if (commandForm) {
         throw new Error(data.error || 'Failed to save command');
       }
 
-      setCommandFeedback('Command saved', '#136f63');
+      setCommandFeedback('Command saved', COLOR_SUCCESS());
       setTimeout(() => window.location.reload(), 350);
     } catch (error) {
-      setCommandFeedback(error.message, '#b42318');
+      setCommandFeedback(error.message, COLOR_DANGER());
     } finally {
       setButtonLoading(submitBtn, false);
       updateCommandSubmitState();
@@ -4098,7 +4104,7 @@ function closeCustomCommandEditModal() {
   }
   if (customCommandEditFeedback) {
     customCommandEditFeedback.textContent = '';
-    customCommandEditFeedback.style.color = '#5d645d';
+    customCommandEditFeedback.style.color = COLOR_MUTED();
   }
   syncModalBodyScrollLock();
 }
@@ -4122,7 +4128,7 @@ function openCustomCommandEditModal(trigger) {
   list.forEach((button) => addCustomCommandEditButtonRow(button));
   if (customCommandEditFeedback) {
     customCommandEditFeedback.textContent = '';
-    customCommandEditFeedback.style.color = '#5d645d';
+    customCommandEditFeedback.style.color = COLOR_MUTED();
   }
 
   if (customCommandEditModal) {
@@ -4183,7 +4189,7 @@ if (customCommandEditSaveBtn) {
     setButtonLoading(customCommandEditSaveBtn, true, 'Updating command');
     if (customCommandEditFeedback) {
       customCommandEditFeedback.textContent = 'Saving...';
-      customCommandEditFeedback.style.color = '#5d645d';
+      customCommandEditFeedback.style.color = COLOR_MUTED();
     }
 
     try {
@@ -4202,7 +4208,7 @@ if (customCommandEditSaveBtn) {
     } catch (error) {
       if (customCommandEditFeedback) {
         customCommandEditFeedback.textContent = error.message || 'Failed to update command';
-        customCommandEditFeedback.style.color = '#b42318';
+        customCommandEditFeedback.style.color = COLOR_DANGER();
       }
       setButtonLoading(customCommandEditSaveBtn, false);
     }
@@ -4359,7 +4365,7 @@ function openBuiltInCommandModal(commandKey) {
 
   if (builtInEditorFeedback) {
     builtInEditorFeedback.textContent = '';
-    builtInEditorFeedback.style.color = '#5d645d';
+    builtInEditorFeedback.style.color = COLOR_MUTED();
   }
 
   if (key === 'sch') {
@@ -4440,7 +4446,7 @@ if (builtInEditorSaveBtn) {
     if (!text) {
       if (builtInEditorFeedback) {
         builtInEditorFeedback.textContent = 'Text tidak boleh kosong.';
-        builtInEditorFeedback.style.color = '#b42318';
+        builtInEditorFeedback.style.color = COLOR_DANGER();
       }
       return;
     }
@@ -4451,7 +4457,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .sch.';
-          builtInEditorFeedback.style.color = '#b42318';
+          builtInEditorFeedback.style.color = COLOR_DANGER();
         }
         return;
       }
@@ -4464,7 +4470,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .schlist.';
-          builtInEditorFeedback.style.color = '#b42318';
+          builtInEditorFeedback.style.color = COLOR_DANGER();
         }
         return;
       }
@@ -4477,7 +4483,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .schdel.';
-          builtInEditorFeedback.style.color = '#b42318';
+          builtInEditorFeedback.style.color = COLOR_DANGER();
         }
         return;
       }
@@ -4490,7 +4496,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .vv.';
-          builtInEditorFeedback.style.color = '#b42318';
+          builtInEditorFeedback.style.color = COLOR_DANGER();
         }
         return;
       }
@@ -4503,7 +4509,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .sticker.';
-          builtInEditorFeedback.style.color = '#b42318';
+          builtInEditorFeedback.style.color = COLOR_DANGER();
         }
         return;
       }
@@ -4514,7 +4520,7 @@ if (builtInEditorSaveBtn) {
     setButtonLoading(builtInEditorSaveBtn, true, 'Saving built-in command');
     if (builtInEditorFeedback) {
       builtInEditorFeedback.textContent = 'Saving...';
-      builtInEditorFeedback.style.color = '#5d645d';
+      builtInEditorFeedback.style.color = COLOR_MUTED();
     }
 
     try {
@@ -4534,7 +4540,7 @@ if (builtInEditorSaveBtn) {
     } catch (error) {
       if (builtInEditorFeedback) {
         builtInEditorFeedback.textContent = error.message || 'Failed to update built-in command';
-        builtInEditorFeedback.style.color = '#b42318';
+        builtInEditorFeedback.style.color = COLOR_DANGER();
       }
     } finally {
       setButtonLoading(builtInEditorSaveBtn, false);

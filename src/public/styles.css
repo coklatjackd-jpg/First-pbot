@@ -1,65 +1,125 @@
-:root {
-  --background: #0d1511;
-  --foreground: #e6f2ec;
-  --card: #131c18;
-  --card-foreground: #e6f2ec;
-  --surface: #182019;
-  --surface-2: #1e2a22;
-  --muted: #1e2a22;
-  --muted-foreground: #7fa898;
-  --primary: #25d366;
-  --primary-foreground: #ffffff;
-  --border: #263830;
-  --input: #1e2a22;
-  --ring: #25d366;
-  --radius: 1.3rem;
-  --primary-hover: #20bd5b;
-  --primary-soft: rgba(37, 211, 102, 0.15);
-  --focus-ring: rgba(37, 211, 102, 0.28);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
-  --shadow-dropdown: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.3);
+/* ============================================================
+   shadcn/ui — Zinc + Green design tokens
+   Dark  → :root  (default)
+   Light → [data-theme="light"]
+   ============================================================ */
 
-  --success: #25d366;
-  --success-bg: rgba(37, 211, 102, 0.13);
-  --warning: #f6c453;
-  --warning-bg: rgba(246, 196, 83, 0.14);
-  --danger: #f25252;
-  --danger-bg: rgba(242, 82, 82, 0.14);
-  --motion-fast: 140ms;
-  --motion-normal: 220ms;
-  --motion-slow: 320ms;
+:root {
+  /* Base */
+  --background:      #09090b;   /* zinc-950 */
+  --foreground:      #fafafa;   /* zinc-50  */
+
+  /* Card / popover */
+  --card:            #18181b;   /* zinc-900 */
+  --card-foreground: #fafafa;
+  --popover:         #18181b;
+  --popover-foreground: #fafafa;
+
+  /* Layered surfaces */
+  --surface:         #27272a;   /* zinc-800 */
+  --surface-2:       #3f3f46;   /* zinc-700 */
+
+  /* Muted */
+  --muted:           #27272a;
+  --muted-foreground:#a1a1aa;   /* zinc-400 */
+
+  /* Brand / primary — WhatsApp green */
+  --primary:         #22c55e;   /* green-500 */
+  --primary-foreground: #052e16;/* green-950 */
+  --primary-hover:   #16a34a;   /* green-600 */
+  --primary-soft:    rgba(34, 197, 94, 0.12);
+  --focus-ring:      rgba(34, 197, 94, 0.30);
+
+  /* Secondary / accent */
+  --secondary:       #27272a;
+  --secondary-foreground: #fafafa;
+  --accent:          #27272a;
+  --accent-foreground: #fafafa;
+
+  /* Borders & inputs */
+  --border:          #27272a;
+  --input:           #27272a;
+  --ring:            #22c55e;
+
+  /* Shape */
+  --radius:          0.625rem;  /* 10px */
+
+  /* Shadows */
+  --shadow-sm:       0 1px 3px rgba(0,0,0,0.4),  0 1px 2px rgba(0,0,0,0.28);
+  --shadow-md:       0 4px 16px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.35);
+  --shadow-lg:       0 12px 40px rgba(0,0,0,0.6),0 4px 12px rgba(0,0,0,0.4);
+  --shadow-dropdown: 0 16px 40px rgba(0,0,0,0.6),0 4px 12px rgba(0,0,0,0.35);
+
+  /* Semantic */
+  --success:         #22c55e;
+  --success-bg:      rgba(34, 197, 94, 0.12);
+  --warning:         #f59e0b;   /* amber-500 */
+  --warning-bg:      rgba(245, 158, 11, 0.12);
+  --danger:          #ef4444;   /* red-500   */
+  --danger-bg:       rgba(239, 68, 68, 0.12);
+  --destructive:     #ef4444;
+  --destructive-foreground: #fafafa;
+
+  /* Motion */
+  --motion-fast:     140ms;
+  --motion-normal:   220ms;
+  --motion-slow:     320ms;
 }
 
 [data-theme="light"] {
-  --background: #f4f9f6;
-  --foreground: #0d1f17;
-  --card: #ffffff;
-  --card-foreground: #0d1f17;
-  --surface: #eef6f1;
-  --surface-2: #e2eee8;
-  --muted: #e8f3ec;
-  --muted-foreground: #526b5e;
-  --primary: #1aa354;
-  --primary-foreground: #ffffff;
-  --border: #c5dcd0;
-  --input: #deeee6;
-  --ring: #1aa354;
-  --primary-hover: #158f49;
-  --primary-soft: rgba(26, 163, 84, 0.12);
-  --focus-ring: rgba(26, 163, 84, 0.22);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.13), 0 4px 12px rgba(0, 0, 0, 0.07);
-  --shadow-dropdown: 0 16px 40px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.08);
+  /* Base */
+  --background:      #ffffff;
+  --foreground:      #09090b;   /* zinc-950 */
 
-  --success: #1aa354;
-  --success-bg: rgba(26, 163, 84, 0.11);
-  --warning: #c07a00;
-  --warning-bg: rgba(192, 122, 0, 0.12);
-  --danger: #d03535;
-  --danger-bg: rgba(208, 53, 53, 0.11);
+  /* Card / popover */
+  --card:            #ffffff;
+  --card-foreground: #09090b;
+  --popover:         #ffffff;
+  --popover-foreground: #09090b;
+
+  /* Layered surfaces */
+  --surface:         #f4f4f5;   /* zinc-100 */
+  --surface-2:       #e4e4e7;   /* zinc-200 */
+
+  /* Muted */
+  --muted:           #f4f4f5;
+  --muted-foreground:#71717a;   /* zinc-500 */
+
+  /* Brand / primary */
+  --primary:         #16a34a;   /* green-600 */
+  --primary-foreground: #ffffff;
+  --primary-hover:   #15803d;   /* green-700 */
+  --primary-soft:    rgba(22, 163, 74, 0.10);
+  --focus-ring:      rgba(22, 163, 74, 0.22);
+
+  /* Secondary / accent */
+  --secondary:       #f4f4f5;
+  --secondary-foreground: #09090b;
+  --accent:          #f4f4f5;
+  --accent-foreground: #09090b;
+
+  /* Borders & inputs */
+  --border:          #e4e4e7;   /* zinc-200 */
+  --input:           #f4f4f5;
+  --ring:            #16a34a;
+
+  /* Shape (inherit from :root) */
+
+  /* Shadows */
+  --shadow-sm:       0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:       0 4px 16px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.05);
+  --shadow-lg:       0 12px 40px rgba(0,0,0,0.11),0 4px 12px rgba(0,0,0,0.06);
+  --shadow-dropdown: 0 16px 40px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.07);
+
+  /* Semantic */
+  --success:         #16a34a;
+  --success-bg:      rgba(22, 163, 74, 0.10);
+  --warning:         #d97706;   /* amber-600 */
+  --warning-bg:      rgba(217, 119, 6, 0.10);
+  --danger:          #dc2626;   /* red-600   */
+  --danger-bg:       rgba(220, 38, 38, 0.10);
+  --destructive:     #dc2626;
+  --destructive-foreground: #ffffff;
 }
 
 * {
@@ -75,7 +135,7 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Open Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -125,8 +185,8 @@ button {
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: #25d366;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2527,7 +2587,7 @@ tbody tr:hover {
 }
 
 [data-theme="light"] .command-source-built-in {
-  color: #9a1d44;
+  color: color-mix(in srgb, #c0457a 70%, var(--foreground));
 }
 
 .command-source-custom {
