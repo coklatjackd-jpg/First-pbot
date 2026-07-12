@@ -7,9 +7,6 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
     />
     <title>ScheduleBot Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/public/styles.css" />
     <script>
       (function () {
@@ -386,23 +383,11 @@
                       </div>
 
                       <div id="wa-qr-wrap" class="qr-wrap linked-qr-wrap <%= waState.ready ? 'is-connected' : '' %>" <%= waState.ready || waState.qrCodeDataUrl ? '' : 'hidden' %>>
-                        <div class="qr-image-container" id="qrImageContainer">
-                          <% if (waState.qrCodeDataUrl) { %>
-                          <img src="<%= waState.qrCodeDataUrl %>" alt="QR WhatsApp" class="qr" <%= !waState.ready && waState.qrCodeDataUrl ? '' : 'hidden' %> />
-                          <% } else { %>
-                          <img src="" alt="QR WhatsApp" class="qr" hidden />
-                          <% } %>
-                          <div class="qr-expired-overlay" id="qrExpiredOverlay" hidden>
-                            <span class="qr-refresh-spinner" aria-hidden="true"></span>
-                            <p class="qr-expired-label">Refreshing QR...</p>
-                          </div>
-                        </div>
-                        <div class="qr-countdown-wrap" id="qrCountdownWrap" hidden>
-                          <div class="qr-countdown-bar-track">
-                            <div class="qr-countdown-bar-fill" id="qrCountdownBarFill"></div>
-                          </div>
-                          <p class="qr-countdown-text" id="qrCountdownText"></p>
-                        </div>
+                        <% if (waState.qrCodeDataUrl) { %>
+                        <img src="<%= waState.qrCodeDataUrl %>" alt="QR WhatsApp" class="qr" <%= !waState.ready && waState.qrCodeDataUrl ? '' : 'hidden' %> />
+                        <% } else { %>
+                        <img src="" alt="QR WhatsApp" class="qr" hidden />
+                        <% } %>
                         <div id="wa-qr-connected-banner" class="qr-connected-banner" <%= waState.ready ? '' : 'hidden' %>>
                           <span class="connected-icon" aria-hidden="true">✓</span>
                           <div>
@@ -418,13 +403,9 @@
                           <li>Scan the QR code above using your phone camera.</li>
                         </ol>
                       </div>
-                      <div id="wa-qr-empty" class="qr-empty-wrap" <%= !waState.ready && !waState.qrCodeDataUrl ? '' : 'hidden' %>>
-                        <div class="qr-connecting-spinner" id="qrConnectingSpinner"></div>
-                        <p class="qr-connecting-status" id="qrConnectingStatus"><%= waState.status || 'Connecting to WhatsApp...' %></p>
-                        <p class="qr-connecting-hint">QR code will appear once connection is established.</p>
-                        <button type="button" class="btn btn-outline btn-sm" id="waResetBtn" style="margin-top: 8px;">Reset &amp; Get New QR</button>
-                        <p class="qr-connecting-feedback" id="waResetFeedback"></p>
-                      </div>
+                      <p id="wa-qr-empty" class="muted" <%= !waState.ready && !waState.qrCodeDataUrl ? '' : 'hidden' %>>
+                        QR will appear automatically when re-login is needed.
+                      </p>
                     </div>
 
                     <div id="phone-method" class="method-panel linked-method-panel" hidden>
@@ -743,9 +724,49 @@
                       <p class="hint" id="sendPersonalChatFetchHint">Pick a personal chat to auto-fill the destination ID.</p>
                     </div>
 
+                    <div class="field" id="sendMediaTypeField">
+                      <label for="sendMediaType">Attach Media <span class="muted">(optional)</span></label>
+                      <select id="sendMediaType" name="mediaType">
+                        <option value="">Select media type first</option>
+                        <option value="none">No media</option>
+                        <% mediaTypes.forEach((type) => { %>
+                        <option value="<%= type %>"><%= type %></option>
+                        <% }) %>
+                      </select>
+                      <p class="hint">Select media type to show related fields.</p>
+                    </div>
+
+                    <div id="send-media-fields" hidden>
+                      <div class="field" id="sendMediaSourceField">
+                        <label>Media Source</label>
+                        <div class="source-tabs" role="tablist" aria-label="Media source selector">
+                          <button type="button" class="source-tab active" data-send-media-source="url" role="tab" aria-selected="true">By URL</button>
+                          <button type="button" class="source-tab" data-send-media-source="upload" role="tab" aria-selected="false">Upload File</button>
+                        </div>
+                        <input id="sendMediaSource" name="mediaSource" type="hidden" value="url" />
+                        <p class="hint">Choose where media will be loaded from.</p>
+                      </div>
+
+                      <div class="field" id="sendMediaUrlField">
+                        <label for="sendMediaUrl">Media URL <span class="muted">(optional)</span></label>
+                        <input id="sendMediaUrl" name="mediaUrl" placeholder="https://..." />
+                      </div>
+
+                      <div class="field" id="sendMediaUploadField" hidden>
+                        <label for="sendMediaUpload">Upload Media File <span class="muted">(max 20MB)</span></label>
+                        <input id="sendMediaUpload" name="mediaUpload" type="file" />
+                        <p class="hint">Choose a file to upload and use as media source.</p>
+                      </div>
+
+                      <div class="field" id="sendFileNameField" hidden>
+                        <label for="sendFileName">File Name <span class="muted">(document only, optional)</span></label>
+                        <input id="sendFileName" name="fileName" placeholder="brochure.pdf" />
+                      </div>
+                    </div>
+
                     <div class="field">
                       <label for="sendMessageText">Message</label>
-                      <textarea id="sendMessageText" name="message" rows="4" required></textarea>
+                      <textarea id="sendMessageText" name="message" rows="4"></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block">Send Now</button>
@@ -782,16 +803,6 @@
                       <label for="commandTrigger">Trigger</label>
                       <input id="commandTrigger" name="trigger" placeholder=".hello" required />
                       <p class="hint">Auto adds . at the front, example: .hello</p>
-                    </div>
-
-                    <div class="field">
-                      <label for="commandGroup">Command Group</label>
-                      <select id="commandGroup" name="group">
-                        <% commandGroups.forEach((groupName) => { %>
-                        <option value="<%= groupName %>" <%= groupName === 'Other' ? 'selected' : '' %>><%= groupName %></option>
-                        <% }) %>
-                      </select>
-                      <p class="hint">Choose which group this command belongs to in the command list.</p>
                     </div>
 
                     <div class="field">
@@ -1016,37 +1027,34 @@
                         </tr>
 
                         <% const filteredCustomCommands = customCommands.filter((item) => !builtInCommandTriggers.has(String(item.trigger || '').trim().toLowerCase())); %>
-                        <% const groupedCustomCommands = filteredCustomCommands.reduce((acc, item) => { const groupName = String(item.group || 'Custom Command').trim() || 'Custom Command'; if (!acc[groupName]) acc[groupName] = []; acc[groupName].push(item); return acc; }, {}); %>
-                        <% const orderedGroups = ['Built-In', 'Group Management', 'File Tools', 'Downloader', 'Personal Assistance', 'Other']; %>
 
                         <% if (!filteredCustomCommands.length) { %>
                         <tr class="command-row">
                           <td colspan="4" class="muted command-empty-cell">No custom commands yet (built-in commands are listed above)</td>
                         </tr>
                         <% } else { %>
-                        <% orderedGroups.forEach((groupName) => { const items = groupedCustomCommands[groupName] || []; if (!items.length) return; %>
-                        <tr class="command-row command-row-parent" data-tree-group="<%= groupName.toLowerCase().replace(/[^a-z0-9]+/g, '-') %>">
+                        <tr class="command-row command-row-parent" data-tree-group="custom">
                           <td class="command-name-cell">
-                            <button type="button" class="command-tree-toggle" data-tree-toggle="<%= groupName.toLowerCase().replace(/[^a-z0-9]+/g, '-') %>" data-tree-label="<%= groupName %>" aria-expanded="true" aria-controls="tree-<%= groupName.toLowerCase().replace(/[^a-z0-9]+/g, '-') %>-children" aria-label="Collapse <%= groupName %>">
+                            <button type="button" class="command-tree-toggle" data-tree-toggle="custom" data-tree-label="Custom Commands" aria-expanded="true" aria-controls="tree-custom-children" aria-label="Collapse Custom Commands">
                               <svg class="command-tree-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M9 6l6 6-6 6"></path>
                               </svg>
                             </button>
-                            <span class="command-name"><%= groupName %></span>
+                            <span class="command-name">Custom Commands</span>
                           </td>
                           <td><span class="command-source command-source-custom">Custom</span></td>
                           <td class="command-detail-cell">
-                            <span class="muted">Expandable <%= groupName.toLowerCase() %> set</span>
+                            <span class="muted">Expandable custom command set</span>
                           </td>
                           <td class="command-action-cell">
                             <span class="muted">—</span>
                           </td>
                         </tr>
 
-                        <% items.forEach((item) => { %>
+                        <% filteredCustomCommands.forEach((item) => { %>
                         <% const popoverId = `command-detail-${String(item.trigger || '').replace(/[^a-z0-9_-]+/gi, '-')}`; %>
-                        <% const customChildId = `tree-${groupName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-children-${String(item.trigger || '').replace(/[^a-z0-9_-]+/gi, '-')}`; %>
-                        <tr class="command-row command-row-child" data-tree-parent="<%= groupName.toLowerCase().replace(/[^a-z0-9]+/g, '-') %>" id="<%= customChildId %>" data-trigger="<%= item.trigger %>">
+                        <% const customChildId = `tree-custom-children-${String(item.trigger || '').replace(/[^a-z0-9_-]+/gi, '-')}`; %>
+                        <tr class="command-row command-row-child" data-tree-parent="custom" id="<%= customChildId %>" data-trigger="<%= item.trigger %>">
                           <td class="command-name-cell">
                             <span class="command-tree-branch" aria-hidden="true"></span>
                             <span class="command-name"><%= item.trigger %></span>
@@ -1067,7 +1075,6 @@
                             <button class="btn btn-ghost btn-sm btn-delete-command" data-trigger="<%= item.trigger %>">Delete</button>
                           </td>
                         </tr>
-                        <% }) %>
                         <% }) %>
                         <% } %>
                       </tbody>
@@ -1317,7 +1324,11 @@
         </header>
         <div class="card-content schedule-detail-body">
           <div class="command-detail-popover-editor command-editor-modal-body">
-            <div id="commandDetailContent" class="command-detail-modal-content"></div>
+            <p class="schedule-modal-row"><span class="schedule-modal-label">Trigger</span><span class="schedule-modal-value" id="commandDetailTriggerValue">-</span></p>
+            <p class="schedule-modal-row"><span class="schedule-modal-label">Source</span><span class="schedule-modal-value" id="commandDetailSourceValue">-</span></p>
+            <p class="schedule-modal-row"><span class="schedule-modal-label">Media</span><span class="schedule-modal-value" id="commandDetailMediaValue">-</span></p>
+            <p class="schedule-modal-row"><span class="schedule-modal-label">Buttons</span><span class="schedule-modal-value" id="commandDetailButtonsValue">-</span></p>
+            <p class="schedule-modal-row schedule-modal-row-message"><span class="schedule-modal-label">Response</span><span class="schedule-modal-value" id="commandDetailResponseValue">-</span></p>
           </div>
         </div>
         <footer class="schedule-modal-actions schedule-detail-footer">
@@ -1340,13 +1351,6 @@
             <label for="customCommandEditTrigger">Trigger</label>
             <input id="customCommandEditTrigger" type="text" readonly />
 
-            <label for="customCommandEditGroup">Command Group</label>
-            <select id="customCommandEditGroup">
-              <% commandGroups.forEach((groupName) => { %>
-              <option value="<%= groupName %>"><%= groupName %></option>
-              <% }) %>
-            </select>
-
             <label for="customCommandEditMediaType">Media Type</label>
             <select id="customCommandEditMediaType">
               <option value="none">No media</option>
@@ -1361,14 +1365,11 @@
             <label for="customCommandEditFileName">File Name <span class="muted">(document only, optional)</span></label>
             <input id="customCommandEditFileName" type="text" placeholder="brochure.pdf" />
 
-            <label for="customCommandEditResponse">Response Text</label>
+            <label for="customCommandEditResponse">Text Help</label>
             <textarea id="customCommandEditResponse" rows="4" placeholder="Reply message..."></textarea>
 
-            <div class="field-head">
-              <label>Interactive Buttons <span class="muted">(optional)</span></label>
-              <div class="field-head-actions">
-                <button type="button" class="btn btn-outline btn-sm" id="customCommandEditAddButtonBtn">Add Button</button>
-              </div>
+            <div class="command-detail-popover-actions command-detail-popover-inline-actions">
+              <button type="button" class="btn btn-ghost btn-sm" id="customCommandEditAddButtonBtn">Add Button</button>
             </div>
             <div id="customCommandEditButtonRows" class="button-rows"></div>
 

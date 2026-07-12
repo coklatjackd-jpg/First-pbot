@@ -29,7 +29,6 @@ const {
   makeInMemoryStore,
   normalizeMessageContent,
   downloadContentFromMessage,
-  Browsers,
 } = baileys;
 
 function sleep(ms) {
@@ -448,7 +447,6 @@ class WhatsAppService {
   constructor() {
     this.sock = null;
     this.qrCodeDataUrl = null;
-    this.qrGeneratedAt = null;
     this.ready = false;
     this.lastStatus = 'Initializing...';
     this.reconnectTimer = null;
@@ -587,10 +585,10 @@ class WhatsAppService {
         keys: makeCacheableSignalKeyStore(state.keys, socketLogger),
       },
       logger: socketLogger,
-      browser: Browsers.macOS('Chrome'),
+      browser: ['ScheduleBot', 'Desktop', '1.0.0'],
       printQRInTerminal: false,
       connectTimeoutMs: Number(process.env.WA_CONNECT_TIMEOUT_MS || 60000),
-      keepAliveIntervalMs: 25000,
+      keepAliveIntervalMs: 15000,
       defaultQueryTimeoutMs: Number(process.env.WA_QUERY_TIMEOUT_MS || 60000),
       version,
     });
@@ -621,7 +619,6 @@ class WhatsAppService {
 
       if (qr) {
         this.qrCodeDataUrl = await qrcode.toDataURL(qr);
-        this.qrGeneratedAt = Date.now();
         this.lastStatus = 'Scan QR from dashboard';
         this.ready = false;
         this.isInitializing = false;
@@ -638,7 +635,6 @@ class WhatsAppService {
         this.isInitializing = false;
         this.reconnectAttempts = 0;
         this.qrCodeDataUrl = null;
-        this.qrGeneratedAt = null;
         this.pairingCode = null;
         if (!wasReady) {
           console.log('[WA] Client ready');
@@ -704,39 +700,13 @@ class WhatsAppService {
     return statusCode ? `unknown (${statusCode})` : 'unknown';
   }
 
-  async forceReset() {
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
-    try {
-      if (this.sock) {
-        this.sock.end(new Error('force_reset'));
-        this.sock = null;
-      }
-    } catch (_) {}
-    this.ready = false;
-    this.isInitializing = false;
-    this.initPromise = null;
-    this.reconnectAttempts = 0;
-    this.qrCodeDataUrl = null;
-    this.qrGeneratedAt = null;
-    this.pairingCode = null;
-    this.lastStatus = 'Restarting connection...';
-    try {
-      fs.rmSync(this.authPath, { recursive: true, force: true });
-      fs.mkdirSync(this.authPath, { recursive: true });
-    } catch (_) {}
-    this.init();
-  }
-
   scheduleReinitialize(trigger, delayOverrideMs) {
     if (this.reconnectTimer) return;
 
     this.reconnectAttempts += 1;
     const reconnectDelayMs = typeof delayOverrideMs === 'number'
       ? delayOverrideMs
-      : Math.min(1000 * (2 ** (this.reconnectAttempts - 1)), 30000);
+      : Math.min(4000 * (2 ** (this.reconnectAttempts - 1)), 60000);
 
     this.lastStatus = `Reconnecting after ${trigger} in ${Math.round(reconnectDelayMs / 1000)}s...`;
     this.reconnectTimer = setTimeout(async () => {
@@ -778,7 +748,6 @@ class WhatsAppService {
       ready: this.ready,
       status: this.lastStatus,
       qrCodeDataUrl: this.qrCodeDataUrl,
-      qrGeneratedAt: this.qrGeneratedAt,
       pairingCode: this.pairingCode,
       connectedAccount: {
         jid,

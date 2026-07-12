@@ -3,7 +3,6 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const compression = require('compression');
 
 function setupNoisyLogFilter() {
   if (process.env.WA_FILTER_NOISY_LOGS === '0') return;
@@ -145,10 +144,9 @@ fs.mkdirSync(uploadDir, { recursive: true });
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/public', express.static(path.join(__dirname, 'public'), { maxAge: '30s' }));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadDir));
 
 app.get('/healthz', (req, res) => {

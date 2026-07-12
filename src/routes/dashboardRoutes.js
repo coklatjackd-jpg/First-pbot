@@ -82,7 +82,6 @@ function createDashboardRouter(whatsappService) {
       dayjs,
       customCommands,
       commandCategories: customCommandStore.ALLOWED_CATEGORIES,
-      commandGroups: customCommandStore.ALLOWED_COMMAND_GROUPS,
       mediaTypes: customCommandStore.ALLOWED_MEDIA_TYPES,
       deletedMessages,
       chatResponseSettings,
@@ -187,6 +186,31 @@ function createDashboardRouter(whatsappService) {
     }
   });
 
+  router.post('/api/messages/upload-media', upload.single('mediaFile'), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const mediaType = String(req.body?.mediaType || '').trim();
+      const allowedMedia = new Set(customCommandStore.ALLOWED_MEDIA_TYPES);
+      if (!allowedMedia.has(mediaType)) {
+        return res.status(400).json({ error: 'Invalid media type for upload' });
+      }
+
+      const host = req.get('host');
+      const protocol = req.protocol || 'http';
+      const mediaUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+
+      return res.status(201).json({
+        mediaUrl,
+        fileName: req.file.originalname || req.file.filename,
+      });
+    } catch (error) {
+      return res.status(400).json({ error: error.message || 'Failed to upload media file' });
+    }
+  });
+
   router.post('/api/schedules', async (req, res, next) => {
     try {
       const {
@@ -261,13 +285,17 @@ function createDashboardRouter(whatsappService) {
 
   router.post('/api/messages/send', async (req, res) => {
     try {
-      const { targetType, targetValue, message } = req.body || {};
+      const { targetType, targetValue, message, mediaType, mediaUrl, fileName } = req.body || {};
       const normalizedTargetType =
         targetType === 'personal-manual' || targetType === 'personal-chat' ? 'personal' : targetType;
+      const normalizedMessage = String(message || '').trim();
+      const normalizedMediaType = String(mediaType || '').trim();
+      const normalizedMediaUrl = String(mediaUrl || '').trim();
+      const normalizedFileName = String(fileName || '').trim();
 
-      if (!normalizedTargetType || !targetValue || !message) {
+      if (!normalizedTargetType || !targetValue || (!normalizedMessage && !(normalizedMediaType && normalizedMediaType !== 'none' && normalizedMediaUrl))) {
         return res.status(400).json({
-          error: 'targetType, targetValue, and message are required',
+          error: 'targetType, targetValue, and either a message or media are required',
         });
       }
 
@@ -275,10 +303,24 @@ function createDashboardRouter(whatsappService) {
         return res.status(400).json({ error: 'targetType must be personal or group' });
       }
 
+      const allowedMedia = new Set(customCommandStore.ALLOWED_MEDIA_TYPES);
+      if (normalizedMediaType && normalizedMediaType !== 'none' && !allowedMedia.has(normalizedMediaType)) {
+        return res.status(400).json({ error: 'Invalid media type' });
+      }
+
+      const media = normalizedMediaType && normalizedMediaType !== 'none' && normalizedMediaUrl
+        ? {
+            mediaType: normalizedMediaType,
+            mediaUrl: normalizedMediaUrl,
+            fileName: normalizedFileName || undefined,
+          }
+        : null;
+
       await whatsappService.sendMessage(
         normalizedTargetType,
         String(targetValue).trim(),
-        String(message).trim()
+        normalizedMessage,
+        media
       );
 
       return res.status(200).json({ ok: true });
@@ -350,15 +392,6 @@ function createDashboardRouter(whatsappService) {
   router.get('/api/whatsapp/state', (req, res) => {
     const waState = whatsappService.getConnectionState();
     return res.json(waState);
-  });
-
-  router.post('/api/whatsapp/reset', async (req, res) => {
-    try {
-      await whatsappService.forceReset();
-      return res.json({ ok: true });
-    } catch (error) {
-      return res.status(500).json({ error: error.message || 'Reset failed' });
-    }
   });
 
   router.get('/api/chat-response-settings', (req, res) => {

@@ -46,87 +46,6 @@ const waQrCaption = document.getElementById('wa-qr-caption');
 const waQrImage = waQrWrap ? waQrWrap.querySelector('img.qr') : null;
 const waQrInstructions = document.getElementById('wa-qr-instructions');
 const waQrConnectedBanner = document.getElementById('wa-qr-connected-banner');
-const qrCountdownWrap = document.getElementById('qrCountdownWrap');
-const qrCountdownBarFill = document.getElementById('qrCountdownBarFill');
-const qrCountdownText = document.getElementById('qrCountdownText');
-const qrExpiredOverlay = document.getElementById('qrExpiredOverlay');
-const qrConnectingStatus = document.getElementById('qrConnectingStatus');
-const waResetBtn = document.getElementById('waResetBtn');
-const waResetFeedback = document.getElementById('waResetFeedback');
-
-const QR_EXPIRY_SECONDS = 60;
-let _qrCountdownTimer = null;
-let _qrSecondsLeft = 0;
-let _lastQrSrc = '';
-
-function _qrUpdateUI() {
-  const pct = _qrSecondsLeft / QR_EXPIRY_SECONDS;
-  const isWarning = _qrSecondsLeft <= 15 && _qrSecondsLeft > 0;
-  const isExpired = _qrSecondsLeft <= 0;
-
-  if (qrCountdownBarFill) {
-    qrCountdownBarFill.style.width = `${pct * 100}%`;
-    qrCountdownBarFill.classList.toggle('is-warning', isWarning);
-    qrCountdownBarFill.classList.toggle('is-expired', isExpired);
-  }
-
-  if (qrCountdownText) {
-    if (isExpired) {
-      qrCountdownText.textContent = 'Waiting for new QR code...';
-      qrCountdownText.classList.remove('is-warning');
-      qrCountdownText.classList.add('is-expired');
-    } else if (isWarning) {
-      qrCountdownText.textContent = `QR expires in ${_qrSecondsLeft}s — scan now!`;
-      qrCountdownText.classList.add('is-warning');
-      qrCountdownText.classList.remove('is-expired');
-    } else {
-      qrCountdownText.textContent = `QR code valid for ${_qrSecondsLeft}s`;
-      qrCountdownText.classList.remove('is-warning', 'is-expired');
-    }
-  }
-}
-
-function _qrStartCountdown(startFromSeconds) {
-  _qrStopCountdown();
-  _qrSecondsLeft = typeof startFromSeconds === 'number'
-    ? Math.max(1, Math.min(Math.round(startFromSeconds), QR_EXPIRY_SECONDS))
-    : QR_EXPIRY_SECONDS;
-  if (qrCountdownWrap) qrCountdownWrap.hidden = false;
-  if (qrExpiredOverlay) qrExpiredOverlay.hidden = true;
-  if (waQrImage) waQrImage.style.opacity = '';
-  _qrUpdateUI();
-
-  _qrCountdownTimer = setInterval(() => {
-    _qrSecondsLeft -= 1;
-    _qrUpdateUI();
-    if (_qrSecondsLeft <= 0) {
-      _qrStopCountdown();
-      if (qrExpiredOverlay) qrExpiredOverlay.hidden = false;
-      if (waQrImage) waQrImage.style.opacity = '0.15';
-    }
-  }, 1000);
-}
-
-function _qrStopCountdown() {
-  if (_qrCountdownTimer) {
-    clearInterval(_qrCountdownTimer);
-    _qrCountdownTimer = null;
-  }
-}
-
-function _qrReset() {
-  _qrStopCountdown();
-  _lastQrSrc = '';
-  if (qrCountdownWrap) qrCountdownWrap.hidden = true;
-  if (qrExpiredOverlay) qrExpiredOverlay.hidden = true;
-  if (waQrImage) waQrImage.style.opacity = '';
-}
-function _cssColor(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
-const COLOR_MUTED   = () => _cssColor('--muted-foreground');
-const COLOR_DANGER  = () => _cssColor('--danger');
-const COLOR_SUCCESS = () => _cssColor('--success');
-const COLOR_WARNING = () => _cssColor('--warning');
-
 const methodTabQr = document.getElementById('methodTabQr');
 const methodTabPhone = document.getElementById('methodTabPhone');
 const qrMethodPanel = document.getElementById('qr-method');
@@ -148,6 +67,18 @@ const sendTargetValueField = document.getElementById('sendTargetValueField');
 const sendTargetValueLabel = document.getElementById('sendTargetValueLabel');
 const sendTargetHint = document.getElementById('sendTargetHint');
 const sendTargetValueInput = document.getElementById('sendTargetValue');
+const sendMediaTypeField = document.getElementById('sendMediaTypeField');
+const sendMediaTypeInput = document.getElementById('sendMediaType');
+const sendMediaFields = document.getElementById('send-media-fields');
+const sendMediaSourceInput = document.getElementById('sendMediaSource');
+const sendMediaSourceField = document.getElementById('sendMediaSourceField');
+const sendMediaSourceTabs = Array.from(document.querySelectorAll('[data-send-media-source]'));
+const sendMediaUrlField = document.getElementById('sendMediaUrlField');
+const sendMediaUrlInput = document.getElementById('sendMediaUrl');
+const sendMediaUploadField = document.getElementById('sendMediaUploadField');
+const sendMediaUploadInput = document.getElementById('sendMediaUpload');
+const sendFileNameField = document.getElementById('sendFileNameField');
+const sendFileNameInput = document.getElementById('sendFileName');
 const sendGroupTools = document.getElementById('sendGroupTools');
 const sendGroupPicker = document.getElementById('sendGroupPicker');
 const sendGroupFetchHint = document.getElementById('sendGroupFetchHint');
@@ -643,7 +574,7 @@ function applyTimeZoneSettingUI() {
 
   if (timezoneSettingFeedback) {
     timezoneSettingFeedback.textContent = `Current timezone: ${preferred}`;
-    timezoneSettingFeedback.style.color = COLOR_MUTED();
+    timezoneSettingFeedback.style.color = '#5d645d';
   }
 
   applyProfileSummaryMeta();
@@ -842,7 +773,7 @@ async function loadAccessControlSettings() {
   } catch (error) {
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = error.message;
-      ownerNumberFeedback.style.color = COLOR_DANGER();
+      ownerNumberFeedback.style.color = '#b42318';
     }
   }
 }
@@ -854,7 +785,7 @@ async function saveAccessControlSettings(nextSettings) {
   if (normalized.commandMode === 'private' && ownerDigitCount < 8) {
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = 'Owner number is required (minimum 8 digits) when mode is Private.';
-      ownerNumberFeedback.style.color = COLOR_DANGER();
+      ownerNumberFeedback.style.color = '#b42318';
     }
     return;
   }
@@ -876,12 +807,12 @@ async function saveAccessControlSettings(nextSettings) {
 
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = 'Access control saved successfully.';
-      ownerNumberFeedback.style.color = COLOR_SUCCESS();
+      ownerNumberFeedback.style.color = '#136f63';
     }
   } catch (error) {
     if (ownerNumberFeedback) {
       ownerNumberFeedback.textContent = error.message;
-      ownerNumberFeedback.style.color = COLOR_DANGER();
+      ownerNumberFeedback.style.color = '#b42318';
     }
   } finally {
     setButtonLoading(ownerNumberSaveBtn, false);
@@ -974,7 +905,7 @@ function normalizeChatResponseSettings(value) {
   };
 }
 
-function setBotResponseFeedback(message, color = COLOR_MUTED()) {
+function setBotResponseFeedback(message, color = '#5d645d') {
   if (!botResponseSettingsFeedback) return;
   botResponseSettingsFeedback.textContent = message;
   botResponseSettingsFeedback.style.color = color;
@@ -1034,7 +965,7 @@ async function loadChatResponseSettings() {
     applyChatResponseSettingsUI(chatResponseSettings);
     setBotResponseFeedback('');
   } catch (error) {
-    setBotResponseFeedback(error.message, COLOR_DANGER());
+    setBotResponseFeedback(error.message, '#b42318');
   }
 }
 
@@ -1055,9 +986,9 @@ async function saveChatResponseSettings(nextSettings) {
     }
 
     chatResponseSettings = normalizeChatResponseSettings(data);
-    setBotResponseFeedback('Bot response settings updated successfully.', COLOR_SUCCESS());
+    setBotResponseFeedback('Bot response settings updated successfully.', '#136f63');
   } catch (error) {
-    setBotResponseFeedback(error.message, COLOR_DANGER());
+    setBotResponseFeedback(error.message, '#b42318');
   } finally {
     isSavingBotResponseSettings = false;
     applyChatResponseSettingsUI(chatResponseSettings);
@@ -1120,10 +1051,18 @@ function toggleAccountSettingsDropdown() {
 function applyTheme(theme) {
   const normalized = theme === 'light' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', normalized);
+  document.documentElement.style.colorScheme = normalized;
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, normalized);
   } catch (error) {
     /* ignore storage errors */
+  }
+
+  if (themeToggleBtn) {
+    const isLight = normalized === 'light';
+    themeToggleBtn.setAttribute('aria-pressed', String(isLight));
+    themeToggleBtn.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+    themeToggleBtn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
   }
 }
 
@@ -1134,7 +1073,10 @@ function initTheme() {
   } catch (error) {
     storedTheme = null;
   }
-  applyTheme(storedTheme === 'light' ? 'light' : 'dark');
+
+  const prefersLightMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (prefersLightMode ? 'light' : 'dark');
+  applyTheme(initialTheme);
 }
 
 initTheme();
@@ -1341,7 +1283,7 @@ function renderWhatsAppState(state) {
 
   if (pairingFeedback && isReady) {
     pairingFeedback.textContent = 'Pairing via phone number is disabled while WhatsApp is connected.';
-    pairingFeedback.style.color = COLOR_MUTED();
+    pairingFeedback.style.color = '#5d645d';
   }
 
   if (accountTargetTips) {
@@ -1360,16 +1302,8 @@ function renderWhatsAppState(state) {
       if (waQrCaption) {
         waQrCaption.textContent = 'WhatsApp already connected. QR scan is not required.';
       }
-      _qrReset();
     } else if (qrCodeDataUrl) {
-      if (qrCodeDataUrl !== _lastQrSrc) {
-        _lastQrSrc = qrCodeDataUrl;
-        waQrImage.src = qrCodeDataUrl;
-        const generatedAt = typeof state.qrGeneratedAt === 'number' ? state.qrGeneratedAt : null;
-        const elapsedS = generatedAt ? (Date.now() - generatedAt) / 1000 : 0;
-        const remainingS = QR_EXPIRY_SECONDS - elapsedS;
-        _qrStartCountdown(remainingS > 2 ? remainingS : QR_EXPIRY_SECONDS);
-      }
+      waQrImage.src = qrCodeDataUrl;
       waQrImage.hidden = false;
       waQrWrap.hidden = false;
       waQrWrap.classList.remove('is-connected');
@@ -1387,13 +1321,9 @@ function renderWhatsAppState(state) {
       if (waQrConnectedBanner) waQrConnectedBanner.hidden = true;
       if (waQrInstructions) waQrInstructions.hidden = false;
       waQrEmpty.hidden = false;
-      if (qrConnectingStatus) {
-        qrConnectingStatus.textContent = statusText || 'Connecting to WhatsApp...';
-      }
       if (waQrCaption) {
         waQrCaption.textContent = '';
       }
-      _qrReset();
     }
   }
 
@@ -1534,7 +1464,7 @@ if (accountProfileForm) {
 
     if (accountProfileFeedback) {
       accountProfileFeedback.textContent = 'Profile updated successfully.';
-      accountProfileFeedback.style.color = COLOR_SUCCESS();
+      accountProfileFeedback.style.color = '#136f63';
     }
   });
 }
@@ -1544,7 +1474,7 @@ function saveTimezoneSettingFromSelection() {
   if (!selected || !isSupportedTimeZone(selected)) {
     if (timezoneSettingFeedback) {
       timezoneSettingFeedback.textContent = 'Invalid timezone selected.';
-      timezoneSettingFeedback.style.color = COLOR_DANGER();
+      timezoneSettingFeedback.style.color = '#b42318';
     }
     return false;
   }
@@ -1555,7 +1485,7 @@ function saveTimezoneSettingFromSelection() {
 
   if (timezoneSettingFeedback) {
     timezoneSettingFeedback.textContent = `Timezone saved: ${selected}`;
-    timezoneSettingFeedback.style.color = COLOR_SUCCESS();
+    timezoneSettingFeedback.style.color = '#136f63';
   }
 
   return true;
@@ -1661,19 +1591,19 @@ if (shareScheduleLinkBtn) {
     setButtonLoading(shareScheduleLinkBtn, true, 'Copying share link');
     if (shareScheduleLinkFeedback) {
       shareScheduleLinkFeedback.textContent = 'Preparing share link...';
-      shareScheduleLinkFeedback.style.color = COLOR_MUTED();
+      shareScheduleLinkFeedback.style.color = '#5d645d';
     }
 
     try {
       await copyTextToClipboard(shareUrl);
       if (shareScheduleLinkFeedback) {
         shareScheduleLinkFeedback.textContent = `Share link copied: ${shareUrl}`;
-        shareScheduleLinkFeedback.style.color = COLOR_SUCCESS();
+        shareScheduleLinkFeedback.style.color = '#136f63';
       }
     } catch (error) {
       if (shareScheduleLinkFeedback) {
         shareScheduleLinkFeedback.textContent = `Share link: ${shareUrl}`;
-        shareScheduleLinkFeedback.style.color = COLOR_WARNING();
+        shareScheduleLinkFeedback.style.color = '#9f4f03';
       }
     } finally {
       setButtonLoading(shareScheduleLinkBtn, false);
@@ -1797,33 +1727,12 @@ if (pairingPhoneInput) {
   });
 }
 
-if (waResetBtn) {
-  waResetBtn.addEventListener('click', async () => {
-    waResetBtn.disabled = true;
-    if (waResetFeedback) waResetFeedback.textContent = 'Restarting connection...';
-    try {
-      const res = await fetch('/api/whatsapp/reset', { method: 'POST' });
-      if (!res.ok) throw new Error('Reset failed');
-      if (waResetFeedback) waResetFeedback.textContent = 'Restarted — waiting for QR...';
-      _lastQrSrc = '';
-      await refreshWhatsAppState();
-    } catch (_) {
-      if (waResetFeedback) waResetFeedback.textContent = 'Reset failed, please try again.';
-    } finally {
-      setTimeout(() => {
-        waResetBtn.disabled = false;
-        if (waResetFeedback) waResetFeedback.textContent = '';
-      }, 5000);
-    }
-  });
-}
-
 if (requestPairingBtn) {
   requestPairingBtn.addEventListener('click', async () => {
     if (isWhatsAppReady) {
       if (pairingFeedback) {
         pairingFeedback.textContent = 'Pairing via phone number is disabled while WhatsApp is connected.';
-        pairingFeedback.style.color = COLOR_DANGER();
+        pairingFeedback.style.color = '#b42318';
       }
       return;
     }
@@ -1841,7 +1750,7 @@ if (requestPairingBtn) {
     if (!phoneNumber) {
       if (pairingFeedback) {
         pairingFeedback.textContent = 'Please enter a phone number';
-        pairingFeedback.style.color = COLOR_DANGER();
+        pairingFeedback.style.color = '#b42318';
       }
       return;
     }
@@ -1849,7 +1758,7 @@ if (requestPairingBtn) {
     setButtonLoading(requestPairingBtn, true, 'Requesting pairing code');
     if (pairingFeedback) {
       pairingFeedback.textContent = 'Requesting pairing code...';
-      pairingFeedback.style.color = COLOR_MUTED();
+      pairingFeedback.style.color = '#5d645d';
     }
     if (pairingCodeWrap) pairingCodeWrap.hidden = true;
 
@@ -1871,12 +1780,12 @@ if (requestPairingBtn) {
       }
       if (pairingFeedback) {
         pairingFeedback.textContent = 'Pairing code generated, enter it in WhatsApp.';
-        pairingFeedback.style.color = COLOR_SUCCESS();
+        pairingFeedback.style.color = '#136f63';
       }
     } catch (error) {
       if (pairingFeedback) {
         pairingFeedback.textContent = error.message;
-        pairingFeedback.style.color = COLOR_DANGER();
+        pairingFeedback.style.color = '#b42318';
       }
     } finally {
       setButtonLoading(requestPairingBtn, false);
@@ -1903,13 +1812,13 @@ async function refreshWhatsAppState() {
   }
 }
 
-function setGroupHint(text, color = COLOR_MUTED()) {
+function setGroupHint(text, color = '#5d645d') {
   if (!groupFetchHint) return;
   groupFetchHint.textContent = text;
   groupFetchHint.style.color = color;
 }
 
-function setSendGroupHint(text, color = COLOR_MUTED()) {
+function setSendGroupHint(text, color = '#5d645d') {
   if (!sendGroupFetchHint) return;
   sendGroupFetchHint.textContent = text;
   sendGroupFetchHint.style.color = color;
@@ -1945,13 +1854,13 @@ function setSendGroupPickerOptions(groups) {
   sendGroupPicker.innerHTML = baseOption + optionHtml;
 }
 
-function setPersonalChatHint(text, color = COLOR_MUTED()) {
+function setPersonalChatHint(text, color = '#5d645d') {
   if (!personalChatFetchHint) return;
   personalChatFetchHint.textContent = text;
   personalChatFetchHint.style.color = color;
 }
 
-function setSendPersonalChatHint(text, color = COLOR_MUTED()) {
+function setSendPersonalChatHint(text, color = '#5d645d') {
   if (!sendPersonalChatFetchHint) return;
   sendPersonalChatFetchHint.textContent = text;
   sendPersonalChatFetchHint.style.color = color;
@@ -1997,7 +1906,7 @@ async function loadPersonalChats(force = false) {
 
   personalChatPicker.disabled = true;
   if (refreshPersonalChatsBtn) setButtonLoading(refreshPersonalChatsBtn, true, 'Refreshing chats');
-  setPersonalChatHint('Fetching personal chat list...', COLOR_MUTED());
+  setPersonalChatHint('Fetching personal chat list...', '#5d645d');
 
   try {
     const response = await fetch('/api/whatsapp/personal-chats');
@@ -2012,13 +1921,13 @@ async function loadPersonalChats(force = false) {
     hasLoadedPersonalChats = true;
 
     if (chats.length) {
-      setPersonalChatHint('Select a chat to auto-fill the destination ID.', COLOR_MUTED());
+      setPersonalChatHint('Select a chat to auto-fill the destination ID.', '#5d645d');
     } else {
-      setPersonalChatHint('No personal chats found on this account.', COLOR_WARNING());
+      setPersonalChatHint('No personal chats found on this account.', '#9f4f03');
     }
   } catch (error) {
     setPersonalChatPickerOptions([]);
-    setPersonalChatHint(error.message, COLOR_DANGER());
+    setPersonalChatHint(error.message, '#b42318');
   } finally {
     personalChatPicker.disabled = false;
     if (refreshPersonalChatsBtn) {
@@ -2036,7 +1945,7 @@ async function loadSendPersonalChats(force = false) {
   if (sendRefreshPersonalChatsBtn) {
     setButtonLoading(sendRefreshPersonalChatsBtn, true, 'Refreshing chats');
   }
-  setSendPersonalChatHint('Fetching personal chat list...', COLOR_MUTED());
+  setSendPersonalChatHint('Fetching personal chat list...', '#5d645d');
 
   try {
     const response = await fetch('/api/whatsapp/personal-chats');
@@ -2051,13 +1960,13 @@ async function loadSendPersonalChats(force = false) {
     hasLoadedSendPersonalChats = true;
 
     if (chats.length) {
-      setSendPersonalChatHint('Select a chat to auto-fill the destination ID.', COLOR_MUTED());
+      setSendPersonalChatHint('Select a chat to auto-fill the destination ID.', '#5d645d');
     } else {
-      setSendPersonalChatHint('No personal chats found on this account.', COLOR_WARNING());
+      setSendPersonalChatHint('No personal chats found on this account.', '#9f4f03');
     }
   } catch (error) {
     setSendPersonalChatPickerOptions([]);
-    setSendPersonalChatHint(error.message, COLOR_DANGER());
+    setSendPersonalChatHint(error.message, '#b42318');
   } finally {
     sendPersonalChatPicker.disabled = false;
     if (sendRefreshPersonalChatsBtn) {
@@ -2073,7 +1982,7 @@ async function loadGroups(force = false) {
 
   groupPicker.disabled = true;
   if (refreshGroupsBtn) setButtonLoading(refreshGroupsBtn, true, 'Refreshing groups');
-  setGroupHint('Fetching group list...', COLOR_MUTED());
+  setGroupHint('Fetching group list...', '#5d645d');
 
   try {
     const response = await fetch('/api/whatsapp/groups');
@@ -2088,13 +1997,13 @@ async function loadGroups(force = false) {
     hasLoadedGroups = true;
 
     if (groups.length) {
-      setGroupHint('Select a group to auto-fill the ID.', COLOR_MUTED());
+      setGroupHint('Select a group to auto-fill the ID.', '#5d645d');
     } else {
-      setGroupHint('No groups found on this account.', COLOR_WARNING());
+      setGroupHint('No groups found on this account.', '#9f4f03');
     }
   } catch (error) {
     setGroupPickerOptions([]);
-    setGroupHint(error.message, COLOR_DANGER());
+    setGroupHint(error.message, '#b42318');
   } finally {
     groupPicker.disabled = false;
     if (refreshGroupsBtn) {
@@ -2110,7 +2019,7 @@ async function loadSendGroups(force = false) {
 
   sendGroupPicker.disabled = true;
   if (sendRefreshGroupsBtn) setButtonLoading(sendRefreshGroupsBtn, true, 'Refreshing groups');
-  setSendGroupHint('Fetching group list...', COLOR_MUTED());
+  setSendGroupHint('Fetching group list...', '#5d645d');
 
   try {
     const response = await fetch('/api/whatsapp/groups');
@@ -2125,13 +2034,13 @@ async function loadSendGroups(force = false) {
     hasLoadedSendGroups = true;
 
     if (groups.length) {
-      setSendGroupHint('Select a group to auto-fill the ID.', COLOR_MUTED());
+      setSendGroupHint('Select a group to auto-fill the ID.', '#5d645d');
     } else {
-      setSendGroupHint('No groups found on this account.', COLOR_WARNING());
+      setSendGroupHint('No groups found on this account.', '#9f4f03');
     }
   } catch (error) {
     setSendGroupPickerOptions([]);
-    setSendGroupHint(error.message, COLOR_DANGER());
+    setSendGroupHint(error.message, '#b42318');
   } finally {
     sendGroupPicker.disabled = false;
     if (sendRefreshGroupsBtn) {
@@ -2286,31 +2195,23 @@ if (sendRefreshPersonalChatsBtn) {
   });
 }
 
-let _waPollInterval = null;
-const WA_POLL_QR_MS = 2000;
-const WA_POLL_IDLE_MS = 5000;
-
-function _getWaPollMs() {
-  if (isWhatsAppReady) return WA_POLL_IDLE_MS;
-  return WA_POLL_QR_MS;
+if (sendMediaTypeInput) {
+  sendMediaTypeInput.addEventListener('change', updateSendMediaFlow);
 }
 
-async function _waPollTick() {
-  await refreshWhatsAppState();
-  const nextMs = _getWaPollMs();
-  const curMs = _waPollInterval?._delay;
-  if (curMs !== nextMs) {
-    clearInterval(_waPollInterval);
-    _waPollInterval = setInterval(_waPollTick, nextMs);
-    _waPollInterval._delay = nextMs;
-  }
+if (sendMediaSourceTabs.length) {
+  sendMediaSourceTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const selectedSource = normalizeMediaSourceValue(tab.dataset.sendMediaSource || 'url');
+      setSendMediaSource(selectedSource);
+    });
+  });
 }
 
-refreshWhatsAppState().then(() => {
-  const ms = _getWaPollMs();
-  _waPollInterval = setInterval(_waPollTick, ms);
-  _waPollInterval._delay = ms;
-});
+updateSendMediaFlow();
+
+refreshWhatsAppState();
+window.setInterval(refreshWhatsAppState, 5000);
 
 if (toggleBotResponsePersonal || toggleBotResponseGroup || toggleBotResponseSelfCommand) {
   loadChatResponseSettings();
@@ -2343,7 +2244,7 @@ if (form) {
 
     if (repeatType === 'weekly' && !repeatDays.length) {
       feedback.textContent = 'Select at least one day for a weekly repeat schedule.';
-      feedback.style.color = COLOR_DANGER();
+      feedback.style.color = '#b42318';
       return;
     }
 
@@ -2366,12 +2267,12 @@ if (form) {
 
     if (!payload.targetValue) {
       feedback.textContent = 'Target value is required.';
-      feedback.style.color = COLOR_DANGER();
+      feedback.style.color = '#b42318';
       return;
     }
 
     feedback.textContent = 'Saving schedule...';
-    feedback.style.color = COLOR_MUTED();
+    feedback.style.color = '#5d645d';
     setButtonLoading(submitBtn, true, 'Saving schedule');
 
     try {
@@ -2408,7 +2309,7 @@ if (form) {
       }
 
       feedback.textContent = 'Schedule saved successfully';
-      feedback.style.color = COLOR_SUCCESS();
+      feedback.style.color = '#136f63';
       form.reset();
       syncTargetInputContent();
       updateScheduleRepeatFlow();
@@ -2416,7 +2317,7 @@ if (form) {
       setTimeout(() => window.location.reload(), 350);
     } catch (error) {
       feedback.textContent = error.message;
-      feedback.style.color = COLOR_DANGER();
+      feedback.style.color = '#b42318';
     } finally {
       setButtonLoading(submitBtn, false);
     }
@@ -2429,27 +2330,57 @@ if (sendForm) {
     const submitBtn = sendForm.querySelector('button[type="submit"]');
 
     const formData = new FormData(sendForm);
+    const selectedMediaType = String(formData.get('mediaType') || 'none').trim();
+    const selectedMediaSource = String(formData.get('mediaSource') || 'url').trim();
+    let mediaUrl = String(formData.get('mediaUrl') || '').trim();
+    let fileName = String(formData.get('fileName') || '').trim();
+
     const payload = {
       targetType: String(formData.get('targetType') || '').trim(),
       targetValue: String(formData.get('targetValue') || '').trim(),
       message: String(formData.get('message') || '').trim(),
+      mediaType: selectedMediaType,
     };
 
-    if (!payload.targetType || !payload.targetValue || !payload.message) {
+    const hasMediaAttachment = Boolean(selectedMediaType && selectedMediaType !== 'none');
+    const hasMessageText = Boolean(payload.message);
+
+    if (!payload.targetType || !payload.targetValue || (!hasMessageText && !hasMediaAttachment)) {
       if (sendFeedback) {
-        sendFeedback.textContent = 'Target type, target value, and message are required.';
-        sendFeedback.style.color = COLOR_DANGER();
+        sendFeedback.textContent = 'Target type, target value, and either a message or media are required.';
+        sendFeedback.style.color = '#b42318';
       }
       return;
     }
 
     if (sendFeedback) {
       sendFeedback.textContent = 'Sending message...';
-      sendFeedback.style.color = COLOR_MUTED();
+      sendFeedback.style.color = '#5d645d';
     }
     setButtonLoading(submitBtn, true, 'Sending message');
 
     try {
+      if (hasMediaAttachment && selectedMediaSource === 'upload') {
+        const selectedFile = sendMediaUploadInput?.files?.[0];
+        if (selectedFile) {
+          if (sendFeedback) {
+            sendFeedback.textContent = 'Uploading media file...';
+          }
+          const uploaded = await uploadScheduleMediaFile(selectedFile, selectedMediaType);
+          mediaUrl = String(uploaded.mediaUrl || '').trim();
+          if (!fileName) {
+            fileName = String(uploaded.fileName || '').trim();
+          }
+        }
+      }
+
+      if (hasMediaAttachment && !mediaUrl) {
+        throw new Error('Provide a media URL or upload a file.');
+      }
+
+      payload.mediaUrl = mediaUrl;
+      payload.fileName = fileName;
+
       const response = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2463,17 +2394,18 @@ if (sendForm) {
 
       if (sendFeedback) {
         sendFeedback.textContent = 'Message sent successfully';
-        sendFeedback.style.color = COLOR_SUCCESS();
+        sendFeedback.style.color = '#136f63';
       }
 
       const selectedType = String(sendTargetTypeInput?.value || 'group').trim();
       sendForm.reset();
       if (sendTargetTypeInput) sendTargetTypeInput.value = selectedType || 'group';
+      updateSendMediaFlow();
       syncSendTargetInputContent();
     } catch (error) {
       if (sendFeedback) {
         sendFeedback.textContent = error.message;
-        sendFeedback.style.color = COLOR_DANGER();
+        sendFeedback.style.color = '#b42318';
       }
     } finally {
       setButtonLoading(submitBtn, false);
@@ -2593,7 +2525,7 @@ function closeScheduleViewModal() {
   activeScheduleModalId = '';
   if (scheduleModalFeedback) {
     scheduleModalFeedback.textContent = '';
-    scheduleModalFeedback.style.color = COLOR_MUTED();
+    scheduleModalFeedback.style.color = '#5d645d';
   }
   if (scheduleModalDeleteBtn) {
     setButtonLoading(scheduleModalDeleteBtn, false);
@@ -2660,7 +2592,7 @@ function openScheduleViewModal(item) {
   if (scheduleModalMessage) scheduleModalMessage.textContent = String(item.message || '-');
   if (scheduleModalFeedback) {
     scheduleModalFeedback.textContent = '';
-    scheduleModalFeedback.style.color = COLOR_MUTED();
+    scheduleModalFeedback.style.color = '#5d645d';
   }
   if (scheduleModalDeleteBtn) {
     setButtonLoading(scheduleModalDeleteBtn, false);
@@ -2713,7 +2645,7 @@ if (scheduleModalDeleteBtn) {
     setButtonLoading(scheduleModalDeleteBtn, true, 'Deleting schedule');
     if (scheduleModalFeedback) {
       scheduleModalFeedback.textContent = 'Deleting schedule...';
-      scheduleModalFeedback.style.color = COLOR_MUTED();
+      scheduleModalFeedback.style.color = '#5d645d';
     }
 
     try {
@@ -2728,14 +2660,14 @@ if (scheduleModalDeleteBtn) {
 
       if (scheduleModalFeedback) {
         scheduleModalFeedback.textContent = 'Schedule deleted';
-        scheduleModalFeedback.style.color = COLOR_SUCCESS();
+        scheduleModalFeedback.style.color = '#136f63';
       }
 
       setTimeout(() => window.location.reload(), 250);
     } catch (error) {
       if (scheduleModalFeedback) {
         scheduleModalFeedback.textContent = error.message;
-        scheduleModalFeedback.style.color = COLOR_DANGER();
+        scheduleModalFeedback.style.color = '#b42318';
       }
       setButtonLoading(scheduleModalDeleteBtn, false);
       scheduleModalDeleteBtn.disabled = false;
@@ -2749,7 +2681,6 @@ const commandForm = document.getElementById('command-form');
 const commandFeedback = document.getElementById('command-feedback');
 const commandAdvancedFields = document.getElementById('command-advanced-fields');
 const commandTriggerInput = document.getElementById('commandTrigger');
-const commandGroupInput = document.getElementById('commandGroup');
 const commandMediaTypeInput = document.getElementById('commandMediaType');
 const commandResponseInput = document.getElementById('commandResponse');
 const commandMediaSourceInput = document.getElementById('commandMediaSource');
@@ -3129,11 +3060,76 @@ if (buttonSetupGuideModal) {
 function setCommandFeedback(message, color) {
   if (!commandFeedback) return;
   commandFeedback.textContent = message;
-  commandFeedback.style.color = color || COLOR_MUTED();
+  commandFeedback.style.color = color || '#5d645d';
 }
 
 function normalizeMediaSourceValue(value) {
   return String(value || '').trim() === 'upload' ? 'upload' : 'url';
+}
+
+function syncSendMediaSourceTabs() {
+  const selectedSource = normalizeMediaSourceValue(sendMediaSourceInput?.value || 'url');
+
+  sendMediaSourceTabs.forEach((tab) => {
+    const tabSource = normalizeMediaSourceValue(tab.dataset.sendMediaSource || 'url');
+    const isActive = tabSource === selectedSource;
+    tab.classList.toggle('active', isActive);
+    tab.setAttribute('aria-selected', String(isActive));
+  });
+}
+
+function setSendMediaSource(source) {
+  if (!sendMediaSourceInput) return;
+  sendMediaSourceInput.value = normalizeMediaSourceValue(source);
+  syncSendMediaSourceTabs();
+  updateSendMediaFlow();
+}
+
+function updateSendMediaFlow() {
+  const selectedMediaType = String(sendMediaTypeInput?.value || '').trim();
+  const isNoMedia = !selectedMediaType || selectedMediaType === 'none';
+  const isDocument = selectedMediaType === 'document';
+  const showMediaFields = !isNoMedia;
+
+  if (sendMediaFields) {
+    sendMediaFields.hidden = !showMediaFields;
+  }
+
+  if (!showMediaFields) {
+    if (sendMediaUrlInput) sendMediaUrlInput.value = '';
+    if (sendMediaUploadInput) sendMediaUploadInput.value = '';
+    if (sendFileNameInput) sendFileNameInput.value = '';
+    if (sendMediaSourceInput) sendMediaSourceInput.value = 'url';
+  }
+
+  const mediaSource = normalizeMediaSourceValue(sendMediaSourceInput?.value || 'url');
+  if (sendMediaSourceInput) {
+    sendMediaSourceInput.value = mediaSource;
+  }
+  syncSendMediaSourceTabs();
+  const useUpload = showMediaFields && mediaSource === 'upload';
+
+  if (sendMediaSourceField) {
+    sendMediaSourceField.hidden = !showMediaFields;
+  }
+  if (sendMediaUrlField) {
+    sendMediaUrlField.hidden = !showMediaFields || useUpload;
+  }
+  if (sendMediaUrlInput && (!showMediaFields || useUpload)) {
+    sendMediaUrlInput.value = '';
+  }
+  if (sendMediaUploadField) {
+    sendMediaUploadField.hidden = !showMediaFields || !useUpload;
+  }
+  if (sendMediaUploadInput && (!showMediaFields || !useUpload)) {
+    sendMediaUploadInput.value = '';
+  }
+  if (sendFileNameField) {
+    sendFileNameField.hidden = !showMediaFields || !isDocument;
+  }
+  if (sendFileNameInput && (!showMediaFields || !isDocument)) {
+    sendFileNameInput.value = '';
+  }
 }
 
 function syncScheduleMediaSourceTabs() {
@@ -3540,7 +3536,7 @@ if (commandForm) {
     if (selectedMediaType && selectedMediaType !== 'none' && selectedMediaSource === 'upload') {
       const selectedFile = commandMediaUploadInput?.files?.[0];
       if (selectedFile) {
-        setCommandFeedback('Uploading media file...', COLOR_MUTED());
+        setCommandFeedback('Uploading media file...', '#5d645d');
         const uploaded = await uploadCommandMediaFile(selectedFile, selectedMediaType);
         mediaUrl = String(uploaded.mediaUrl || '').trim();
         if (!fileName) {
@@ -3552,14 +3548,13 @@ if (commandForm) {
     const payload = {
       trigger: normalizeCommandTrigger(formData.get('trigger') || ''),
       response: String(formData.get('response') || '').trim(),
-      group: String(commandGroupInput?.value || 'Other').trim() || 'Other',
       mediaType: getNormalizedMediaType(),
       mediaUrl,
       fileName,
       buttons: collectButtonsFromRows(),
     };
 
-    setCommandFeedback('Saving command...', COLOR_MUTED());
+    setCommandFeedback('Saving command...', '#5d645d');
     setButtonLoading(submitBtn, true, 'Saving command');
 
     try {
@@ -3574,10 +3569,10 @@ if (commandForm) {
         throw new Error(data.error || 'Failed to save command');
       }
 
-      setCommandFeedback('Command saved', COLOR_SUCCESS());
+      setCommandFeedback('Command saved', '#136f63');
       setTimeout(() => window.location.reload(), 350);
     } catch (error) {
-      setCommandFeedback(error.message, COLOR_DANGER());
+      setCommandFeedback(error.message, '#b42318');
     } finally {
       setButtonLoading(submitBtn, false);
       updateCommandSubmitState();
@@ -3915,106 +3910,17 @@ document.querySelectorAll('.btn-preview-command').forEach((button) => {
 const commandDetailModal = document.getElementById('commandDetailModal');
 const closeCommandDetailModalBtn = document.getElementById('closeCommandDetailModal');
 const commandDetailCloseBtn = document.getElementById('commandDetailCloseBtn');
-const commandDetailContent = document.getElementById('commandDetailContent');
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+const commandDetailTriggerValue = document.getElementById('commandDetailTriggerValue');
+const commandDetailSourceValue = document.getElementById('commandDetailSourceValue');
+const commandDetailMediaValue = document.getElementById('commandDetailMediaValue');
+const commandDetailButtonsValue = document.getElementById('commandDetailButtonsValue');
+const commandDetailResponseValue = document.getElementById('commandDetailResponseValue');
 
 function closeCommandDetailModal() {
   if (commandDetailModal) {
     commandDetailModal.hidden = true;
   }
   syncModalBodyScrollLock();
-}
-
-function renderCommandDetailContent(command) {
-  if (!commandDetailContent) return;
-
-  const trigger = String(command?.trigger || '').trim() || '-';
-  const source = command?.source === 'built-in' || command?.source === 'builtin' ? 'Built-in' : 'Custom';
-  const group = String(command?.group || command?.category || 'Other').trim() || 'Other';
-  const category = String(command?.category || 'General').trim() || 'General';
-  const description = String(command?.description || '').trim();
-  const mediaType = String(command?.mediaType || '').trim() || 'none';
-  const mediaUrl = String(command?.mediaUrl || '').trim();
-  const fileName = String(command?.fileName || '').trim();
-  const response = String(command?.response || '').trim() || 'No response text';
-  const buttons = Array.isArray(command?.buttons) ? command.buttons : [];
-
-  const buttonMarkup = buttons.length
-    ? buttons.map((buttonItem) => {
-      const params = parseButtonParams(buttonItem);
-      const firstSingleSelectRow = Array.isArray(params.sections)
-        ? params.sections
-          .flatMap((section) => (Array.isArray(section?.rows) ? section.rows : []))
-          .find((item) => item && typeof item === 'object' && (item.id || item.title))
-        : null;
-      const label = params.display_text || params.title || firstSingleSelectRow?.title || buttonItem?.name || 'Button';
-      const value = params.id || params.url || params.phone_number || params.copy_code || firstSingleSelectRow?.id || '—';
-      return `
-        <li class="command-detail-item">
-          <span class="command-detail-item-title">${escapeHtml(label)}</span>
-          <span class="command-detail-item-value">${escapeHtml(value)}</span>
-        </li>
-      `;
-    }).join('')
-    : '<p class="command-detail-empty">No interactive buttons configured.</p>';
-
-  const mediaMarkup = mediaUrl
-    ? `<a class="command-detail-link" href="${escapeHtml(mediaUrl)}" target="_blank" rel="noopener">${escapeHtml(fileName || mediaType)}</a>`
-    : '<span class="command-detail-empty">No media selected.</span>';
-
-  commandDetailContent.innerHTML = `
-    <div class="command-detail-shell">
-      <div class="command-detail-header">
-        <div class="command-detail-badge">${escapeHtml(trigger)}</div>
-        <div class="command-detail-header-copy">
-          <h4 class="command-detail-title">${escapeHtml(trigger)}</h4>
-          <p class="command-detail-subtitle">${escapeHtml(description || 'Command details and response preview')}</p>
-        </div>
-      </div>
-
-      <div class="command-detail-grid">
-        <div class="command-detail-card">
-          <span class="command-detail-label">Group</span>
-          <span class="command-detail-value">${escapeHtml(group)}</span>
-        </div>
-        <div class="command-detail-card">
-          <span class="command-detail-label">Source</span>
-          <span class="command-detail-value">${escapeHtml(source)}</span>
-        </div>
-        <div class="command-detail-card">
-          <span class="command-detail-label">Category</span>
-          <span class="command-detail-value">${escapeHtml(category)}</span>
-        </div>
-        <div class="command-detail-card">
-          <span class="command-detail-label">Media</span>
-          <span class="command-detail-value">${escapeHtml(mediaType)}</span>
-        </div>
-      </div>
-
-      <div class="command-detail-section">
-        <div class="command-detail-section-head">Response</div>
-        <p class="command-detail-response">${escapeHtml(response)}</p>
-      </div>
-
-      <div class="command-detail-section">
-        <div class="command-detail-section-head">Media</div>
-        <div class="command-detail-media-block">${mediaMarkup}</div>
-      </div>
-
-      <div class="command-detail-section">
-        <div class="command-detail-section-head">Buttons</div>
-        <ul class="command-detail-list">${buttonMarkup}</ul>
-      </div>
-    </div>
-  `;
 }
 
 function openCommandDetailModal(trigger) {
@@ -4024,7 +3930,14 @@ function openCommandDetailModal(trigger) {
   const command = commandsByTrigger.get(key);
   if (!command) return;
 
-  renderCommandDetailContent(command);
+  if (commandDetailTriggerValue) commandDetailTriggerValue.textContent = key;
+  if (commandDetailSourceValue) commandDetailSourceValue.textContent = command.source === 'custom' ? 'Custom' : 'Built-in';
+  if (commandDetailMediaValue) commandDetailMediaValue.textContent = command.mediaType || 'none';
+  if (commandDetailButtonsValue) {
+    const buttons = Array.isArray(command.buttons) ? command.buttons : [];
+    commandDetailButtonsValue.textContent = buttons.length ? buttons.map((button) => button.title || button.name || button.value || 'Button').join(', ') : 'none';
+  }
+  if (commandDetailResponseValue) commandDetailResponseValue.textContent = command.response || 'No response text';
 
   if (commandDetailModal) {
     commandDetailModal.hidden = false;
@@ -4077,7 +3990,6 @@ const customCommandEditModal = document.getElementById('customCommandEditModal')
 const closeCustomCommandEditModalBtn = document.getElementById('closeCustomCommandEditModal');
 const customCommandEditOriginalTriggerInput = document.getElementById('customCommandEditOriginalTrigger');
 const customCommandEditTriggerInput = document.getElementById('customCommandEditTrigger');
-const customCommandEditGroupInput = document.getElementById('customCommandEditGroup');
 const customCommandEditMediaTypeInput = document.getElementById('customCommandEditMediaType');
 const customCommandEditMediaUrlInput = document.getElementById('customCommandEditMediaUrl');
 const customCommandEditFileNameInput = document.getElementById('customCommandEditFileName');
@@ -4104,7 +4016,7 @@ function closeCustomCommandEditModal() {
   }
   if (customCommandEditFeedback) {
     customCommandEditFeedback.textContent = '';
-    customCommandEditFeedback.style.color = COLOR_MUTED();
+    customCommandEditFeedback.style.color = '#5d645d';
   }
   syncModalBodyScrollLock();
 }
@@ -4118,7 +4030,6 @@ function openCustomCommandEditModal(trigger) {
 
   if (customCommandEditOriginalTriggerInput) customCommandEditOriginalTriggerInput.value = key;
   if (customCommandEditTriggerInput) customCommandEditTriggerInput.value = key;
-  if (customCommandEditGroupInput) customCommandEditGroupInput.value = command.group || 'Other';
   if (customCommandEditMediaTypeInput) customCommandEditMediaTypeInput.value = command.mediaType || 'none';
   if (customCommandEditMediaUrlInput) customCommandEditMediaUrlInput.value = command.mediaUrl || '';
   if (customCommandEditFileNameInput) customCommandEditFileNameInput.value = command.fileName || '';
@@ -4128,7 +4039,7 @@ function openCustomCommandEditModal(trigger) {
   list.forEach((button) => addCustomCommandEditButtonRow(button));
   if (customCommandEditFeedback) {
     customCommandEditFeedback.textContent = '';
-    customCommandEditFeedback.style.color = COLOR_MUTED();
+    customCommandEditFeedback.style.color = '#5d645d';
   }
 
   if (customCommandEditModal) {
@@ -4171,7 +4082,6 @@ if (customCommandEditSaveBtn) {
     if (!originalTrigger) return;
 
     const responseText = String(customCommandEditResponseInput?.value || '').trim();
-    const group = String(customCommandEditGroupInput?.value || 'Other').trim() || 'Other';
     const mediaType = String(customCommandEditMediaTypeInput?.value || '').trim();
     const mediaUrl = String(customCommandEditMediaUrlInput?.value || '').trim();
     const fileName = String(customCommandEditFileNameInput?.value || '').trim();
@@ -4179,7 +4089,6 @@ if (customCommandEditSaveBtn) {
 
     const payload = {
       response: responseText,
-      group,
       mediaType: mediaType && mediaType !== 'none' ? mediaType : '',
       mediaUrl,
       fileName,
@@ -4189,7 +4098,7 @@ if (customCommandEditSaveBtn) {
     setButtonLoading(customCommandEditSaveBtn, true, 'Updating command');
     if (customCommandEditFeedback) {
       customCommandEditFeedback.textContent = 'Saving...';
-      customCommandEditFeedback.style.color = COLOR_MUTED();
+      customCommandEditFeedback.style.color = '#5d645d';
     }
 
     try {
@@ -4208,7 +4117,7 @@ if (customCommandEditSaveBtn) {
     } catch (error) {
       if (customCommandEditFeedback) {
         customCommandEditFeedback.textContent = error.message || 'Failed to update command';
-        customCommandEditFeedback.style.color = COLOR_DANGER();
+        customCommandEditFeedback.style.color = '#b42318';
       }
       setButtonLoading(customCommandEditSaveBtn, false);
     }
@@ -4365,7 +4274,7 @@ function openBuiltInCommandModal(commandKey) {
 
   if (builtInEditorFeedback) {
     builtInEditorFeedback.textContent = '';
-    builtInEditorFeedback.style.color = COLOR_MUTED();
+    builtInEditorFeedback.style.color = '#5d645d';
   }
 
   if (key === 'sch') {
@@ -4446,7 +4355,7 @@ if (builtInEditorSaveBtn) {
     if (!text) {
       if (builtInEditorFeedback) {
         builtInEditorFeedback.textContent = 'Text tidak boleh kosong.';
-        builtInEditorFeedback.style.color = COLOR_DANGER();
+        builtInEditorFeedback.style.color = '#b42318';
       }
       return;
     }
@@ -4457,7 +4366,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .sch.';
-          builtInEditorFeedback.style.color = COLOR_DANGER();
+          builtInEditorFeedback.style.color = '#b42318';
         }
         return;
       }
@@ -4470,7 +4379,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .schlist.';
-          builtInEditorFeedback.style.color = COLOR_DANGER();
+          builtInEditorFeedback.style.color = '#b42318';
         }
         return;
       }
@@ -4483,7 +4392,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .schdel.';
-          builtInEditorFeedback.style.color = COLOR_DANGER();
+          builtInEditorFeedback.style.color = '#b42318';
         }
         return;
       }
@@ -4496,7 +4405,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .vv.';
-          builtInEditorFeedback.style.color = COLOR_DANGER();
+          builtInEditorFeedback.style.color = '#b42318';
         }
         return;
       }
@@ -4509,7 +4418,7 @@ if (builtInEditorSaveBtn) {
       if (buttons.length > 10) {
         if (builtInEditorFeedback) {
           builtInEditorFeedback.textContent = 'Maksimum 10 button untuk .sticker.';
-          builtInEditorFeedback.style.color = COLOR_DANGER();
+          builtInEditorFeedback.style.color = '#b42318';
         }
         return;
       }
@@ -4520,7 +4429,7 @@ if (builtInEditorSaveBtn) {
     setButtonLoading(builtInEditorSaveBtn, true, 'Saving built-in command');
     if (builtInEditorFeedback) {
       builtInEditorFeedback.textContent = 'Saving...';
-      builtInEditorFeedback.style.color = COLOR_MUTED();
+      builtInEditorFeedback.style.color = '#5d645d';
     }
 
     try {
@@ -4540,7 +4449,7 @@ if (builtInEditorSaveBtn) {
     } catch (error) {
       if (builtInEditorFeedback) {
         builtInEditorFeedback.textContent = error.message || 'Failed to update built-in command';
-        builtInEditorFeedback.style.color = COLOR_DANGER();
+        builtInEditorFeedback.style.color = '#b42318';
       }
     } finally {
       setButtonLoading(builtInEditorSaveBtn, false);
