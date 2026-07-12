@@ -706,7 +706,7 @@ class WhatsAppService {
     this.reconnectAttempts += 1;
     const reconnectDelayMs = typeof delayOverrideMs === 'number'
       ? delayOverrideMs
-      : Math.min(4000 * (2 ** (this.reconnectAttempts - 1)), 60000);
+      : Math.min(1000 * (2 ** (this.reconnectAttempts - 1)), 30000);
 
     this.lastStatus = `Reconnecting after ${trigger} in ${Math.round(reconnectDelayMs / 1000)}s...`;
     this.reconnectTimer = setTimeout(async () => {

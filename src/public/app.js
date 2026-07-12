@@ -2248,8 +2248,28 @@ if (sendRefreshPersonalChatsBtn) {
   });
 }
 
-refreshWhatsAppState();
-window.setInterval(refreshWhatsAppState, 5000);
+let _waPollInterval = null;
+let _waPollFastCount = 0;
+const WA_POLL_FAST_MS = 2000;
+const WA_POLL_SLOW_MS = 5000;
+const WA_POLL_FAST_CYCLES = 15;
+
+function _scheduleWaPoll() {
+  if (_waPollInterval) clearInterval(_waPollInterval);
+  const isSettled = isWhatsAppReady || _lastQrSrc !== '';
+  const ms = (!isSettled && _waPollFastCount < WA_POLL_FAST_CYCLES) ? WA_POLL_FAST_MS : WA_POLL_SLOW_MS;
+  _waPollInterval = setInterval(async () => {
+    await refreshWhatsAppState();
+    _waPollFastCount += 1;
+    const nowSettled = isWhatsAppReady || _lastQrSrc !== '';
+    if (_waPollFastCount >= WA_POLL_FAST_CYCLES && !nowSettled) {
+      clearInterval(_waPollInterval);
+      _waPollInterval = setInterval(refreshWhatsAppState, WA_POLL_SLOW_MS);
+    }
+  }, ms);
+}
+
+refreshWhatsAppState().then(_scheduleWaPoll);
 
 if (toggleBotResponsePersonal || toggleBotResponseGroup || toggleBotResponseSelfCommand) {
   loadChatResponseSettings();
